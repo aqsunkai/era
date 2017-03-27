@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false" scan="true" scanPeriod="10 seconds">
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+    <contextName>logback</contextName>
+    <logger name="org.springframework.web" level="error"/>
+    <logger name="org.springboot.sample" level="error" />
+    <logger name="com.alibaba.druid" level="error" />
+    <property name="log.path" value="D:/log/logback.log" />
+
+    <appender name="file"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 每天一归档 -->
+            <fileNamePattern>${log.path}.%d{yyyy-MM-dd}.zip</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date %level [%thread] %logger{36} [%file : %line] %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+    <!--输出sql语句-->
+    <logger name="com.sun" level="debug" />
+
+</configuration>

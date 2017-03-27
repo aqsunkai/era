@@ -52,6 +52,7 @@ public class application extends SpringBootServletInitializer {
     protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
         return builder.sources(this.getClass());
     }
+
     //DataSource配置
     @Bean
     @ConfigurationProperties(prefix = "spring.datasource")

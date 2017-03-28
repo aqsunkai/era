@@ -40,6 +40,7 @@ import javax.sql.DataSource;
 @EnableConfigurationProperties({MyProps.class})
 @MapperScan("com.sun.**.mapper")
 public class application extends SpringBootServletInitializer {
+
     /* Servlet容器默认的Context路径是/
     DispatherServlet匹配的路径(servlet-mapping中的url-patterns)是*//*
     @ComponentScan路径被默认设置为SampleController的同名package，

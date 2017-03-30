@@ -1,7 +1,6 @@
 package com.sun;
 
 import com.alibaba.druid.pool.DruidDataSource;
-import com.sun.system.YmlConfig;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
@@ -9,7 +8,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
@@ -26,14 +24,15 @@ import javax.sql.DataSource;
  * @ComponentScan：可扫描的
  * @SpringBootApplication 包含上面三个
  * @ServletComponentScan 设置启动时spring能够扫描到我们自己编写的servlet和filter, 用于Druid监控
- * @EnableConfigurationProperties 启动时加载配置的类, 该类用于加载配置文件, 可以在项目中通过依赖注入使用
+ * @EnableConfigurationProperties 启动时加载配置的类, 该类用于加载配置文件, 会把该类的对象实例化成一个bean,
+ * 如果该类再加了实例化成bean的注解,就会出现两个相同的bean,会报错.实例化的bean可以在项目中通过依赖注入使用
  * @MapperScan 扫描的mapper接口
  * application：启动管理器
  * Created by sun on 2017-1-14.
  */
 @SpringBootApplication
 @ServletComponentScan
-@EnableConfigurationProperties({YmlConfig.class})
+//@EnableConfigurationProperties({YmlConfig.class})//不需要了.因为YmlConfig类上有@Component注解
 @MapperScan("com.sun.**.mapper")
 public class Application extends SpringBootServletInitializer {
 

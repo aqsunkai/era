@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 加载配置文件的方法
+ * 加载yaml配置文件的方法
  * Created by sun on 2017-1-15.
  * spring-boot更新到1.5.2版本后locations属性无法使用
  * @PropertySource注解只可以加载proprties文件,无法加载yaml文件

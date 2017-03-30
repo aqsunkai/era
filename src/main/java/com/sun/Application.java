@@ -1,24 +1,20 @@
 package com.sun;
 
 import com.alibaba.druid.pool.DruidDataSource;
-import com.sun.test.MyProps;
+import com.sun.system.YmlConfig;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.servlet.ErrorPage;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -37,16 +33,16 @@ import javax.sql.DataSource;
  */
 @SpringBootApplication
 @ServletComponentScan
-@EnableConfigurationProperties({MyProps.class})
+@EnableConfigurationProperties({YmlConfig.class})
 @MapperScan("com.sun.**.mapper")
-public class application extends SpringBootServletInitializer {
+public class Application extends SpringBootServletInitializer {
 
     /* Servlet容器默认的Context路径是/
     DispatherServlet匹配的路径(servlet-mapping中的url-patterns)是*//*
     @ComponentScan路径被默认设置为SampleController的同名package，
     也就是该package下的所有@Controller，@Service, @Component, @Repository都会被实例化后并加入Spring Context中。*/
     public static void main(String[] args) {
-        SpringApplication springApplication = new SpringApplication(application.class);
+        SpringApplication springApplication = new SpringApplication(Application.class);
         springApplication.run(args);
     }
 

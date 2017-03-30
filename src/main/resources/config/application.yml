@@ -74,3 +74,32 @@ spring:
         exclude: WEB-INF/**
 logging:
     config: classpath:config/logback-spring.xml
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#自定义的属性和值
+myYml:
+  simpleProp: simplePropValue
+  arrayProps: 1,2,3,4,5
+  listProp1:
+    - name: abc
+      value: abcValue
+    - name: efg
+      value: efgValue
+  listProp2:
+    - config2Value1
+    - config2Vavlue2
+  mapProps:
+    key1: value1
+    key2: value2

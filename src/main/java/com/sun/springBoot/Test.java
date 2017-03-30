@@ -2,10 +2,12 @@ package com.sun.springBoot;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.test.MyProps;
+import com.sun.system.YmlConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,18 +22,30 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class Test {
     private static final Logger logger = LoggerFactory.getLogger(Test.class);
     @Autowired
-    private MyProps myProps;
+    private YmlConfig myProps;
+    @Autowired
+    private Environment env;
+    @Value("${zhoufangyu}")
+    String name;
+
 
     @RequestMapping("/")
     @ResponseBody
     String home() throws JsonProcessingException {
         logger.info("测试通过！！！");
         ObjectMapper objectMapper = new ObjectMapper();
+        //测试加载yml文件
         System.out.println("simpleProp: " + myProps.getSimpleProp());
         System.out.println("arrayProps: " + objectMapper.writeValueAsString(myProps.getArrayProps()));
         System.out.println("listProp1: " + objectMapper.writeValueAsString(myProps.getListProp1()));
         System.out.println("listProp2: " + objectMapper.writeValueAsString(myProps.getListProp2()));
         System.out.println("mapProps: " + objectMapper.writeValueAsString(myProps.getMapProps()));
+
+        //测试加载properties文件
+        System.out.println(env.getProperty("sunkai"));
+        System.out.println(env.getProperty("abc"));
+        System.out.println(name);
+
         return "Hello World!";
     }
 

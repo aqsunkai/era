@@ -1,5 +1,5 @@
-#自定义的属性和值
-myProps:
+#自定义的属性和值,由于加载不到,移到application.yml文件中
+myYml:
   simpleProp: simplePropValue
   arrayProps: 1,2,3,4,5
   listProp1:

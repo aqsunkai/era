@@ -1,7 +1,9 @@
 package com.sun.permission.mapper;
 
 import com.sun.permission.model.TRolePermission;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface TRolePermissionMapper {
     int deleteByPrimaryKey(Integer id);
 

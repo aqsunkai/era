@@ -1,7 +1,9 @@
 package com.sun.permission.mapper;
 
 import com.sun.permission.model.TUser;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface TUserMapper {
     int deleteByPrimaryKey(Integer userId);
 
@@ -14,4 +16,11 @@ public interface TUserMapper {
     int updateByPrimaryKeySelective(TUser record);
 
     int updateByPrimaryKey(TUser record);
+
+    /**
+     * 根据用户名获得用户
+     * @param userName
+     * @return
+     */
+    TUser findByUsername(String userName);
 }

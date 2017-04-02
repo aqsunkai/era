@@ -9,7 +9,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
   <head>
     <base href="<%=basePath%>">
     
-    <title>My JSP 'index.jsp' starting page</title>
+    <title>Login</title>
 	<meta http-equiv="pragma" content="no-cache">
 	<meta http-equiv="cache-control" content="no-cache">
 	<meta http-equiv="expires" content="0">    
@@ -21,15 +21,20 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 	<script src="<%=basePath%>js/jquery-2.1.4/jquery.min.js"></script>
   </head>
   
-  <body>
+  <body style="text-align: center">
+     <h1>登录页面----</h1>
      <form action="<%=basePath%>/login" method="post">
-         User Name : <input type="text" name="username" id="userName"/>
-         Password: <input type="password" name="password" id="password"/>
-         <input type="submit" value="Sign In"/>
-         b3b33a4e-979e-4e7b-b298-57ff21579dad
+         用户名 : <input type="text" name="userName" id="userName"/><br>
+         密码: <input type="password" name="password" id="password"/><br>
+         <input type="submit" value="登录"/><input style="left: 50px" onclick="register()" type="button" value="注册"/>
      </form>
+     <h1 style="color: red">${message }</h1>
   </body>
   <script type="text/javascript">
+
+      function register(){
+          location.href="<%=basePath%>permission/userInsert";
+      }
 
   </script>
 </html>

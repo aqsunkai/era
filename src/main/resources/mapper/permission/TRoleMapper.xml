@@ -16,6 +16,22 @@
     from t_role
     where role_id = #{roleId,jdbcType=INTEGER}
   </select>
+  <select id="getRolesName" resultType="java.lang.String" parameterType="java.lang.Integer" >
+    select
+    t_role.role_name
+    from t_role
+    left join t_user_role on t_role.role_id = t_user_role.role_id
+    left join t_user on t_user_role.user_id = t_user.user_id
+    where t_user.user_id = #{userId,jdbcType=INTEGER}
+  </select>
+  <select id="getRoleList" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select
+    t_role.role_id,t_role.role_name,t_role.created_time,t_role.update_time
+    from t_role
+    left join t_user_role on t_role.role_id = t_user_role.role_id
+    left join t_user on t_user_role.user_id = t_user.user_id
+    where t_user.user_id = #{userId,jdbcType=INTEGER}
+  </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
     delete from t_role
     where role_id = #{roleId,jdbcType=INTEGER}

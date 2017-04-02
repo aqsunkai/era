@@ -1,4 +1,4 @@
-package com.sun.system;
+package com.sun.configuration;
 
 import com.alibaba.druid.support.http.WebStatFilter;
 

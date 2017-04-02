@@ -1,4 +1,4 @@
-package com.sun.system;
+package com.sun.configuration;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -1,4 +1,4 @@
-package com.sun.system;
+package com.sun.configuration;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

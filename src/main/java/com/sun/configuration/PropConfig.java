@@ -1,4 +1,4 @@
-package com.sun.system;
+package com.sun.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

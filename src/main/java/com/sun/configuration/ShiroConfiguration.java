@@ -1,10 +1,13 @@
 package com.sun.configuration;
 
 import org.apache.shiro.cache.ehcache.EhCacheManager;
+import org.apache.shiro.codec.Base64;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
+import org.apache.shiro.web.mgt.CookieRememberMeManager;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
+import org.apache.shiro.web.servlet.SimpleCookie;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,6 +48,37 @@ public class ShiroConfiguration {
         return realm;
     }
 
+    /**
+     * cookie对象;
+     * rememberMeCookie()方法是设置Cookie的生成模版，比如cookie的name，cookie的有效时间等等。
+     * @return
+     */
+    @Bean
+    public SimpleCookie rememberMeCookie(){
+        //System.out.println("ShiroConfiguration.rememberMeCookie()");
+        //这个参数是cookie的名称，对应前端的checkbox的name = rememberMe
+        SimpleCookie simpleCookie = new SimpleCookie("rememberMe");
+        simpleCookie.setHttpOnly(true);
+        //<!-- 记住我cookie生效时间30天 ,单位秒;-->
+        simpleCookie.setMaxAge(259200);
+        return simpleCookie;
+    }
+
+    /**
+     * cookie管理对象;
+     * rememberMeManager()方法是生成rememberMe管理器，而且要将这个rememberMe管理器设置到securityManager中
+     * @return
+     */
+    @Bean
+    public CookieRememberMeManager rememberMeManager(){
+        //System.out.println("ShiroConfiguration.rememberMeManager()");
+        CookieRememberMeManager cookieRememberMeManager = new CookieRememberMeManager();
+        cookieRememberMeManager.setCookie(rememberMeCookie());
+        //rememberMe cookie加密的密钥 建议每个项目都不一样 默认AES算法 密钥长度(128 256 512 位)
+        cookieRememberMeManager.setCipherKey(Base64.decode("4AvVhmFLUs0KTA3Kprsdag=="));
+        return cookieRememberMeManager;
+    }
+
     @Bean(name = "lifecycleBeanPostProcessor")
     public LifecycleBeanPostProcessor lifecycleBeanPostProcessor(){
         return new LifecycleBeanPostProcessor();
@@ -60,9 +94,12 @@ public class ShiroConfiguration {
     @Bean(name = "securityManager")
     public DefaultWebSecurityManager defaultWebSecurityManager(MyShiroRealm realm){
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+        //设置realm
         securityManager.setRealm(realm);
-        //用户授权/认证信息Cache, 采用EhCache 缓存
+        //用户授权/认证信息Cache, 采用EhCache缓存
         securityManager.setCacheManager(getEhCacheManager());
+        //注入记住我管理器;
+        securityManager.setRememberMeManager(rememberMeManager());
         return securityManager;
     }
 
@@ -92,6 +129,9 @@ public class ShiroConfiguration {
     private void loadShiroFilterChain(ShiroFilterFactoryBean factoryBean) {
         /**下面这些规则配置最好配置到配置文件中*/
         Map<String, String> filterChainMap = new LinkedHashMap<String, String>();
+        //配置记住我或认证通过可以访问的地址
+        filterChainMap.put("/index", "user");
+        filterChainMap.put("/", "user");
         /** authc：该过滤器下的页面必须验证后才能访问，它是Shiro内置的一个拦截器
          * org.apache.shiro.web.filter.authc.FormAuthenticationFilter */
         //filterChainMap.put("/tUser", "authc");//输入http://localhost:8080/myEra/tUser会跳到登录页面
@@ -105,4 +145,14 @@ public class ShiroConfiguration {
 
         factoryBean.setFilterChainDefinitionMap(filterChainMap);
     }
+
+    /*1.LifecycleBeanPostProcessor，这是个DestructionAwareBeanPostProcessor的子类，负责org.apache.shiro.util.Initializable类型bean的生命周期的，初始化和销毁。主要是AuthorizingRealm类的子类，以及EhCacheManager类。
+    2.HashedCredentialsMatcher，这个类是为了对密码进行编码的，防止密码在数据库里明码保存，当然在登陆认证的生活，这个类也负责对form里输入的密码进行编码。
+    3.ShiroRealm，这是个自定义的认证类，继承自AuthorizingRealm，负责用户的认证和权限的处理，可以参考JdbcRealm的实现。
+    4.EhCacheManager，缓存管理，用户登陆成功后，把用户信息和权限信息缓存起来，然后每次用户请求时，放入用户的session中，如果不设置这个bean，每个请求都会查询一次数据库。
+    5.SecurityManager，权限管理，这个类组合了登陆，登出，权限，session的处理，是个比较重要的类。
+    6.ShiroFilterFactoryBean，是个factorybean，为了生成ShiroFilter。它主要保持了三项数据，securityManager，filters，filterChainDefinitionManager。
+    7.DefaultAdvisorAutoProxyCreator，Spring的一个bean，由Advisor决定对哪些类的方法进行AOP代理。
+    8.AuthorizationAttributeSourceAdvisor，shiro里实现的Advisor类，内部使用AopAllianceAnnotationsAuthorizingMethodInterceptor来拦截用以下注解的方法。*/
+
 }

@@ -3,6 +3,7 @@ package com.sun.springBoot;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.configuration.YmlConfig;
+import com.sun.permission.model.TUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 
 /**
@@ -33,7 +35,7 @@ public class Test {
 
     @RequestMapping("/")
     @ResponseBody
-    String home() throws JsonProcessingException, UnsupportedEncodingException {
+    String home(HttpServletRequest req) throws JsonProcessingException, UnsupportedEncodingException {
         logger.info("测试通过！！！");
         ObjectMapper objectMapper = new ObjectMapper();
         //测试加载yml文件
@@ -48,6 +50,9 @@ public class Test {
         System.out.println(env.getProperty("abc"));//null
         System.out.println(name);//26
 
+        System.out.println(req.getSession().getAttribute("currentUser"));
+        TUser tUser = (TUser) req.getSession().getAttribute("currentUser");
+        System.out.println(tUser.getUserId()+","+tUser.getUserName());
         return "Hello World!";
     }
 

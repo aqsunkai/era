@@ -33,6 +33,7 @@ public class MyShiroRealm extends AuthorizingRealm {
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
         //UsernamePasswordToken用于存放提交的登录信息
         UsernamePasswordToken token = (UsernamePasswordToken)authenticationToken;
+        logger.info("登录认证!");
         logger.info("验证当前Subject时获取到token为：" + ReflectionToStringBuilder.toString(token, ToStringStyle.MULTI_LINE_STYLE));
         TUser user = permissionService.findByUsername(token.getUsername());
         if (user != null){
@@ -58,6 +59,7 @@ public class MyShiroRealm extends AuthorizingRealm {
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         String loginName = (String) super.getAvailablePrincipal(principals);
         TUser user = permissionService.findByUsername(loginName);
+        logger.info("权限认证!");
         if (user != null){
             // 权限信息对象info，用来存放查出的用户的所有的角色及权限
             SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();

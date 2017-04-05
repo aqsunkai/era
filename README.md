@@ -37,4 +37,4 @@
            shiro权限认证缓存已实现
 2017-04-03 密码加密已实现,permissionController中对密码先加密,再验证
            把当前用户放入session中,在controller中获取已实现
-
+2017-04-05 重新建个数据库,权限表代码改造,修改druid启动代码,监控正常了

@@ -127,7 +127,7 @@ CREATE TABLE `sys_user` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `nickname` varchar(20) DEFAULT NULL COMMENT '用户昵称',
   `email` varchar(128) DEFAULT NULL COMMENT '邮箱|登录帐号',
-  `pswd` varchar(32) DEFAULT NULL COMMENT '密码',
+  `pswd` varchar(255) DEFAULT NULL COMMENT '密码',
   `create_time` datetime DEFAULT NULL COMMENT '创建时间',
   `last_login_time` datetime DEFAULT NULL COMMENT '最后登录时间',
   `status` TINYINT DEFAULT '1' COMMENT '1:有效，0:禁止登录',
@@ -137,12 +137,11 @@ CREATE TABLE `sys_user` (
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
-INSERT INTO `sys_user` VALUES ('1', 'admin', 'admin@qq.com', 'l9a0lajfwQ3VRSh4jUUJSQ==', NOW(), NOW(), '1');
-INSERT INTO `sys_user` VALUES ('11', 'root', '8446666@qq.com', 'CBbObwI8VQ2MrKFGmnWL8w==', '2016-05-26 20:50:54', '2017-02-13 15:49:04', '1');
-INSERT INTO `sys_user` VALUES ('12', '8446666', '8446666', 'x16YjoF1LNE=', '2016-05-27 22:34:19', '2016-06-15 17:03:16', '1');
-INSERT INTO `sys_user` VALUES ('13', '123', '123', 'KL/QrouuaRWRWlkI0mpwbw==', '2016-05-27 22:34:19', '2016-06-15 17:03:16', '0');
-INSERT INTO `sys_user` VALUES ('14', 'haiqin', '123123@qq.com', 'zrt4HMxuDq3V8tXGdIBKjA==', '2016-05-27 22:34:19', '2017-03-23 21:39:44', '1');
-
+INSERT INTO `sys_user` VALUES ('1', 'admin', 'admin@qq.com', 'CpievEp3tWpuK7exnZldGFzkQJDBPimEt+zG1EbUth6pmRt2pMLwSxtNJEhBRJRU', NOW(), NOW(), '1');
+INSERT INTO `sys_user` VALUES ('11', 'root', '8446666@qq.com', 'CpievEp3tWpuK7exnZldGFzkQJDBPimEt+zG1EbUth6pmRt2pMLwSxtNJEhBRJRU', '2016-05-26 20:50:54', '2017-02-13 15:49:04', '1');
+INSERT INTO `sys_user` VALUES ('12', '8446666', '8446666', 'CpievEp3tWpuK7exnZldGFzkQJDBPimEt+zG1EbUth6pmRt2pMLwSxtNJEhBRJRU', '2016-05-27 22:34:19', '2016-06-15 17:03:16', '1');
+INSERT INTO `sys_user` VALUES ('13', '123', '123', 'CpievEp3tWpuK7exnZldGFzkQJDBPimEt+zG1EbUth6pmRt2pMLwSxtNJEhBRJRU', '2016-05-27 22:34:19', '2016-06-15 17:03:16', '0');
+INSERT INTO `sys_user` VALUES ('14', 'haiqin', '123123@qq.com', 'CpievEp3tWpuK7exnZldGFzkQJDBPimEt+zG1EbUth6pmRt2pMLwSxtNJEhBRJRU', '2016-05-27 22:34:19', '2017-03-23 21:39:44', '1');
 -- ----------------------------
 -- Table structure for sys_user_role
 -- ----------------------------

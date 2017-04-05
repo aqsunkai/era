@@ -35,7 +35,7 @@ import javax.sql.DataSource;
 @SpringBootApplication
 @ServletComponentScan
 //@EnableConfigurationProperties({YmlConfig.class})//不需要了.因为YmlConfig类上有@Component注解
-@MapperScan("com.sun.**.mapper")
+@MapperScan("com.sun.**.mapper") //配置扫描mapper接口的地址
 public class Application extends SpringBootServletInitializer implements CommandLineRunner{
 
     private final Logger logger = Logger.getLogger(Application.class);
@@ -54,33 +54,6 @@ public class Application extends SpringBootServletInitializer implements Command
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
         return builder.sources(this.getClass());
-    }
-
-    //DataSource配置
-    @Bean
-    @ConfigurationProperties(prefix = "spring.datasource")
-    @Primary
-    public DataSource dataSource() {
-        return new DruidDataSource();
-    }
-
-    //提供SqlSeesion
-    @Bean
-    public SqlSessionFactory sqlSessionFactoryBean() throws Exception {
-
-        SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
-        sqlSessionFactoryBean.setDataSource(dataSource());
-
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-
-        sqlSessionFactoryBean.setMapperLocations(resolver.getResources("classpath:mapper/**/*.xml"));
-
-        return sqlSessionFactoryBean.getObject();
-    }
-
-    @Bean
-    public PlatformTransactionManager transactionManager() {
-        return new DataSourceTransactionManager(dataSource());
     }
 
     // springboot运行后此方法首先被调用

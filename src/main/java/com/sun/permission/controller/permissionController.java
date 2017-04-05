@@ -3,6 +3,7 @@ package com.sun.permission.controller;
 import com.sun.permission.model.User;
 import com.sun.permission.service.PermissionService;
 import com.sun.util.CommonUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
@@ -41,8 +42,12 @@ public class permissionController {
         if(bindingResult.hasErrors()){
             return "redirect:login";
         }
-
         String email = user.getEmail();
+        if(StringUtils.isBlank(user.getEmail()) || StringUtils.isBlank(user.getPswd())){
+            logger.info("用户名或密码为空! ");
+            redirectAttributes.addFlashAttribute("message", "用户名或密码为空!");
+            return "redirect:login";
+        }
         //对密码进行加密后验证
         UsernamePasswordToken token = new UsernamePasswordToken(user.getEmail(), CommonUtils.encrypt(user.getPswd()));
         //获取当前的Subject

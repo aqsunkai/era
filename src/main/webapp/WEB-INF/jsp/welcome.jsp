@@ -20,13 +20,13 @@
     <shiro:user>我已登录,或已记住<br/></shiro:user>
     <shiro:guest>我是访客<br/></shiro:guest>
     <shiro:hasAnyRoles name="manager,admin">manager or admin 角色用户登录显示此内容<br/></shiro:hasAnyRoles>
-    <shiro:hasRole name="管理员">我是管理员<br/></shiro:hasRole>
+    <shiro:hasRole name="系统管理员">我是系统管理员<br/></shiro:hasRole>
     <shiro:hasRole name="会员">我是会员<br/></shiro:hasRole>
     <h2>权限列表</h2>
-    <shiro:hasPermission name="用户管理">具有用户管理权限用户显示此内容<br/></shiro:hasPermission>
-    <shiro:hasPermission name="菜单管理">具有菜单管理权限用户显示此内容<br/></shiro:hasPermission>
-    <shiro:hasPermission name="地区管理">具有地区管理权限用户显示此内容<br/></shiro:hasPermission>
-    <shiro:lacksPermission name="地区管理">不具有地区管理权限的用户显示此内容 <br/></shiro:lacksPermission>
+    <shiro:hasPermission name="权限列表">具有权限列表权限用户显示此内容<br/></shiro:hasPermission>
+    <shiro:hasPermission name="用户列表">具有用户列表权限用户显示此内容<br/></shiro:hasPermission>
+    <shiro:hasPermission name="在线用户">具有在线用户权限用户显示此内容<br/></shiro:hasPermission>
+    <shiro:lacksPermission name="角色分配保存">不具有角色分配保存权限的用户显示此内容 <br/></shiro:lacksPermission>
 
 </body>
 </html>

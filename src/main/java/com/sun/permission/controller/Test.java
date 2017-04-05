@@ -1,4 +1,4 @@
-package com.sun.springBoot;
+package com.sun.permission.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

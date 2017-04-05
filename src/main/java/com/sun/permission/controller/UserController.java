@@ -18,9 +18,9 @@ import java.io.IOException;
  * Created by sun on 2017-4-2.
  */
 @Controller
-@RequestMapping("tUser")
-public class TUserController {
-    private static final Logger logger = Logger.getLogger(TUserController.class);
+@RequestMapping("user")
+public class UserController {
+    private static final Logger logger = Logger.getLogger(UserController.class);
 
     @Autowired
     private PermissionService permissionService;

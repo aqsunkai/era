@@ -1,7 +1,7 @@
 package com.sun.permission.service;
 
-import com.sun.permission.model.TRole;
-import com.sun.permission.model.TUser;
+import com.sun.permission.model.Role;
+import com.sun.permission.model.User;
 
 import java.util.List;
 import java.util.Set;
@@ -11,9 +11,9 @@ import java.util.Set;
  */
 public interface PermissionService {
 
-    TUser findByUsername(String userName);
+    User findByUserEmail(String email);
     Set<String> getRolesName(Integer userId);
-    List<TRole> getRoleList(Integer userId);
+    List<Role> getRoleList(Integer userId);
     List<String> getPermissionsName(Integer roleId);
-    int insertSelective(TUser user);
+    int insertSelective(User user);
 }

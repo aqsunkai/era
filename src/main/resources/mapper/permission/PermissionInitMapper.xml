@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sun.permission.mapper.PermissionInitMapper" >
+  <resultMap id="BaseResultMap" type="com.sun.permission.model.PermissionInit" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="url" property="url" jdbcType="VARCHAR" />
+    <result column="permission_init" property="permissionInit" jdbcType="VARCHAR" />
+    <result column="sort" property="sort" jdbcType="INTEGER" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, url, permission_init, sort
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from sys_permission_init
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from sys_permission_init
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.sun.permission.model.PermissionInit" >
+    insert into sys_permission_init (id, url, permission_init, 
+      sort)
+    values (#{id,jdbcType=INTEGER}, #{url,jdbcType=VARCHAR}, #{permissionInit,jdbcType=VARCHAR}, 
+      #{sort,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.sun.permission.model.PermissionInit" >
+    insert into sys_permission_init
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="url != null" >
+        url,
+      </if>
+      <if test="permissionInit != null" >
+        permission_init,
+      </if>
+      <if test="sort != null" >
+        sort,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="url != null" >
+        #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="permissionInit != null" >
+        #{permissionInit,jdbcType=VARCHAR},
+      </if>
+      <if test="sort != null" >
+        #{sort,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.sun.permission.model.PermissionInit" >
+    update sys_permission_init
+    <set >
+      <if test="url != null" >
+        url = #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="permissionInit != null" >
+        permission_init = #{permissionInit,jdbcType=VARCHAR},
+      </if>
+      <if test="sort != null" >
+        sort = #{sort,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.sun.permission.model.PermissionInit" >
+    update sys_permission_init
+    set url = #{url,jdbcType=VARCHAR},
+      permission_init = #{permissionInit,jdbcType=VARCHAR},
+      sort = #{sort,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

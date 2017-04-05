@@ -26,7 +26,7 @@ server:
 spring:
     datasource:
         name: era
-        url: jdbc:mysql://localhost:3306/era?useUnicode=true&characterEncoding=UTF-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+        url: jdbc:mysql://localhost:3306/spring_boot?useUnicode=true&characterEncoding=UTF-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
         username: root
         password: 123456
         # 使用druid数据源

@@ -3,7 +3,7 @@ package com.sun.springBoot;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.configuration.YmlConfig;
-import com.sun.permission.model.TUser;
+import com.sun.permission.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,8 +51,8 @@ public class Test {
         System.out.println(name);//26
 
         System.out.println(req.getSession().getAttribute("currentUser"));
-        TUser tUser = (TUser) req.getSession().getAttribute("currentUser");
-        System.out.println(tUser.getUserId()+","+tUser.getUserName());
+        User tUser = (User) req.getSession().getAttribute("currentUser");
+        System.out.println(tUser.getId()+","+tUser.getNickname());
         return "Hello World!";
     }
 

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sun.permission.mapper.UserMapper" >
+  <resultMap id="BaseResultMap" type="com.sun.permission.model.User" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="nickname" property="nickname" jdbcType="VARCHAR" />
+    <result column="email" property="email" jdbcType="VARCHAR" />
+    <result column="pswd" property="pswd" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="last_login_time" property="lastLoginTime" jdbcType="TIMESTAMP" />
+    <result column="status" property="status" jdbcType="TINYINT" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, nickname, email, pswd, create_time, last_login_time, status
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from sys_user
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="findByUserEmail" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select
+    <include refid="Base_Column_List" />
+    from sys_user
+    where email = #{email,jdbcType=VARCHAR}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from sys_user
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.sun.permission.model.User" >
+    insert into sys_user (id, nickname, email, 
+      pswd, create_time, last_login_time, 
+      status)
+    values (#{id,jdbcType=INTEGER}, #{nickname,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, 
+      #{pswd,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{lastLoginTime,jdbcType=TIMESTAMP}, 
+      #{status,jdbcType=TINYINT})
+  </insert>
+  <insert id="insertSelective" parameterType="com.sun.permission.model.User" >
+    insert into sys_user
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="nickname != null" >
+        nickname,
+      </if>
+      <if test="email != null" >
+        email,
+      </if>
+      <if test="pswd != null" >
+        pswd,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="lastLoginTime != null" >
+        last_login_time,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="nickname != null" >
+        #{nickname,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null" >
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="pswd != null" >
+        #{pswd,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lastLoginTime != null" >
+        #{lastLoginTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=TINYINT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.sun.permission.model.User" >
+    update sys_user
+    <set >
+      <if test="nickname != null" >
+        nickname = #{nickname,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null" >
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="pswd != null" >
+        pswd = #{pswd,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lastLoginTime != null" >
+        last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=TINYINT},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.sun.permission.model.User" >
+    update sys_user
+    set nickname = #{nickname,jdbcType=VARCHAR},
+      email = #{email,jdbcType=VARCHAR},
+      pswd = #{pswd,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
+      status = #{status,jdbcType=TINYINT}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

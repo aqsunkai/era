@@ -1,10 +1,10 @@
 package com.sun.permission.service.impl;
 
-import com.sun.permission.mapper.TPermissionMapper;
-import com.sun.permission.mapper.TRoleMapper;
-import com.sun.permission.mapper.TUserMapper;
-import com.sun.permission.model.TRole;
-import com.sun.permission.model.TUser;
+import com.sun.permission.mapper.PermissionMapper;
+import com.sun.permission.mapper.RoleMapper;
+import com.sun.permission.mapper.UserMapper;
+import com.sun.permission.model.Role;
+import com.sun.permission.model.User;
 import com.sun.permission.service.PermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,18 +20,18 @@ import java.util.Set;
 @Service
 public class PermissionServiceImpl implements PermissionService{
     @Autowired
-    private TUserMapper tUserMapper;
+    private UserMapper tUserMapper;
     @Autowired
-    private TRoleMapper tRoleMapper;
+    private RoleMapper tRoleMapper;
     @Autowired
-    private TPermissionMapper tPermissionMapper;
+    private PermissionMapper tPermissionMapper;
     /**
      * 根据用户名查询用户
      * @param userName
      * @return
      */
-    public TUser findByUsername(String userName){
-        return tUserMapper.findByUsername(userName);
+    public User findByUserEmail(String userName){
+        return tUserMapper.findByUserEmail(userName);
     }
 
     /**
@@ -53,7 +53,7 @@ public class PermissionServiceImpl implements PermissionService{
      * @param userId
      * @return
      */
-    public List<TRole> getRoleList(Integer userId){
+    public List<Role> getRoleList(Integer userId){
         return tRoleMapper.getRoleList(userId);
     }
 
@@ -72,7 +72,7 @@ public class PermissionServiceImpl implements PermissionService{
      * @param user
      * @return
      */
-    public  int insertSelective(TUser user){
+    public  int insertSelective(User user){
         return tUserMapper.insertSelective(user);
     }
 }

@@ -1,7 +1,7 @@
 package com.sun.configuration;
 
-import com.sun.permission.model.TRole;
-import com.sun.permission.model.TUser;
+import com.sun.permission.model.Role;
+import com.sun.permission.model.User;
 import com.sun.permission.service.PermissionService;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -35,11 +35,11 @@ public class MyShiroRealm extends AuthorizingRealm {
         UsernamePasswordToken token = (UsernamePasswordToken)authenticationToken;
         logger.info("登录认证!");
         logger.info("验证当前Subject时获取到token为：" + ReflectionToStringBuilder.toString(token, ToStringStyle.MULTI_LINE_STYLE));
-        TUser user = permissionService.findByUsername(token.getUsername());
+        User user = permissionService.findByUserEmail(token.getUsername());
         if (user != null){
-            logger.info("用户: " + user.getUserName());
+            logger.info("用户: " + user.getEmail());
             // 若存在，将此用户存放到登录认证info中，无需自己做密码对比，Shiro会为我们进行密码对比校验
-            return new SimpleAuthenticationInfo(user.getUserName(), user.getPassword(), getName());
+            return new SimpleAuthenticationInfo(user.getEmail(), user.getPswd(), getName());
         }
         return null;
     }
@@ -58,18 +58,18 @@ public class MyShiroRealm extends AuthorizingRealm {
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         String loginName = (String) super.getAvailablePrincipal(principals);
-        TUser user = permissionService.findByUsername(loginName);
+        User user = permissionService.findByUserEmail(loginName);
         logger.info("权限认证!");
         if (user != null){
             // 权限信息对象info，用来存放查出的用户的所有的角色及权限
             SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
             //用户的角色集合
-            info.setRoles(permissionService.getRolesName(user.getUserId()));
-            List<TRole> roleList = permissionService.getRoleList(user.getUserId());
-            for (TRole role : roleList){
+            info.setRoles(permissionService.getRolesName(user.getId()));
+            List<Role> roleList = permissionService.getRoleList(user.getId());
+            for (Role role : roleList){
                 //用户的角色对应的所有权限
-                logger.info("角色: "+role.getRoleName());
-                info.addStringPermissions(permissionService.getPermissionsName(role.getRoleId()));
+                logger.info("角色: "+role.getName());
+                info.addStringPermissions(permissionService.getPermissionsName(role.getId()));
             }
             return info;
         }

@@ -2,8 +2,10 @@ package com.sun;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.log4j.Logger;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -34,7 +36,9 @@ import javax.sql.DataSource;
 @ServletComponentScan
 //@EnableConfigurationProperties({YmlConfig.class})//不需要了.因为YmlConfig类上有@Component注解
 @MapperScan("com.sun.**.mapper")
-public class Application extends SpringBootServletInitializer {
+public class Application extends SpringBootServletInitializer implements CommandLineRunner{
+
+    private final Logger logger = Logger.getLogger(Application.class);
 
     /* Servlet容器默认的Context路径是/
     DispatherServlet匹配的路径(servlet-mapping中的url-patterns)是*//*
@@ -45,6 +49,8 @@ public class Application extends SpringBootServletInitializer {
         springApplication.run(args);
     }
 
+    // Java EE应用服务器配置，
+    // 如果要使用tomcat来加载jsp的话就必须继承SpringBootServletInitializer类并且重写其中configure方法
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
         return builder.sources(this.getClass());
@@ -77,4 +83,10 @@ public class Application extends SpringBootServletInitializer {
         return new DataSourceTransactionManager(dataSource());
     }
 
+    // springboot运行后此方法首先被调用
+    // 实现CommandLineRunner抽象类中的run方法
+    @Override
+    public void run(String... args) throws Exception {
+        logger.info("项目启动完成！");
+    }
 }

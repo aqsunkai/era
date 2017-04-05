@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sun.permission.mapper.UserRoleMapper" >
+  <resultMap id="BaseResultMap" type="com.sun.permission.model.UserRole" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="uid" property="uid" jdbcType="VARCHAR" />
+    <result column="rid" property="rid" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, uid, rid
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from sys_user_role
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from sys_user_role
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.sun.permission.model.UserRole" >
+    insert into sys_user_role (id, uid, rid)
+    values (#{id,jdbcType=INTEGER}, #{uid,jdbcType=VARCHAR}, #{rid,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.sun.permission.model.UserRole" >
+    insert into sys_user_role
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="uid != null" >
+        uid,
+      </if>
+      <if test="rid != null" >
+        rid,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="uid != null" >
+        #{uid,jdbcType=VARCHAR},
+      </if>
+      <if test="rid != null" >
+        #{rid,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.sun.permission.model.UserRole" >
+    update sys_user_role
+    <set >
+      <if test="uid != null" >
+        uid = #{uid,jdbcType=VARCHAR},
+      </if>
+      <if test="rid != null" >
+        rid = #{rid,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.sun.permission.model.UserRole" >
+    update sys_user_role
+    set uid = #{uid,jdbcType=VARCHAR},
+      rid = #{rid,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

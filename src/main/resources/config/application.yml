@@ -1,7 +1,7 @@
 #server
 server:
   # 项目contextPath，一般在正式发布版本中，我们不配置
-  context-path: /myEra
+  context-path: /boot
   # 该服务绑定IP地址，启动服务器时如本机不是该IP地址则抛出异常启动失败，只有特殊需求的情况下才配置
   #address: 192.168.0.101
   # 错误页，指定发生错误时，跳转的URL。请查看BasicErrorController源码便知

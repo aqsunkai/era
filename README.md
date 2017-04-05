@@ -38,3 +38,7 @@
 2017-04-03 密码加密已实现,permissionController中对密码先加密,再验证
            把当前用户放入session中,在controller中获取已实现
 2017-04-05 重新建个数据库,权限表代码改造,修改druid启动代码,监控正常了
+           shiro使用redis缓存,不用每次都调用MyShiroRealm类中的doGetAuthorizationInfo方法获取权限信息
+           前端弹出框美化js:sweetalert.min.js在showUser.jsp中使用
+           spring-boot整合redis成功,项目中可以使用redis注解
+           

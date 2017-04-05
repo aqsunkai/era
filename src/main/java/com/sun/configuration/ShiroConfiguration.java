@@ -1,6 +1,5 @@
 package com.sun.configuration;
 
-import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.codec.Base64;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
@@ -8,9 +7,17 @@ import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.CookieRememberMeManager;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.servlet.SimpleCookie;
+import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
+import org.crazycake.shiro.RedisCacheManager;
+import org.crazycake.shiro.RedisManager;
+import org.crazycake.shiro.RedisSessionDAO;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
+import org.springframework.boot.bind.RelaxedPropertyResolver;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -22,7 +29,14 @@ import java.util.Map;
  * Created by sun on 2017-4-2.
  */
 @Configuration
-public class ShiroConfiguration {
+@EnableTransactionManagement
+public class ShiroConfiguration implements EnvironmentAware {
+
+    private RelaxedPropertyResolver propertyResolver;
+
+    public void setEnvironment(Environment env) {
+        this.propertyResolver = new RelaxedPropertyResolver(env, "spring.redis.");
+    }
     /**
      * ShiroFilterFactoryBean 处理拦截资源文件问题。
      * 注意：单独一个ShiroFilterFactoryBean配置是或报错的，因为在
@@ -34,7 +48,7 @@ public class ShiroConfiguration {
      3、部分过滤器可指定参数，如perms，roles
      *
      */
-    @Bean
+    /*@Bean
     public EhCacheManager getEhCacheManager(){
         EhCacheManager ehcacheManager = new EhCacheManager();
         ehcacheManager.setCacheManagerConfigFile("classpath:config/ehcache-shiro.xml");
@@ -46,6 +60,52 @@ public class ShiroConfiguration {
         MyShiroRealm realm = new MyShiroRealm();
         realm.setCacheManager(ehCacheManager);
         return realm;
+    }*/
+    @Bean(name = "myShiroRealm")
+    public MyShiroRealm myShiroRealm(){
+        MyShiroRealm realm = new MyShiroRealm();
+        return realm;
+    }
+
+    /**
+     * 配置shiro redisManager
+     *
+     * @return
+     */
+    public RedisManager redisManager() {
+        RedisManager redisManager = new RedisManager();
+        redisManager.setHost(propertyResolver.getProperty("host"));
+        redisManager.setPort(Integer.valueOf(propertyResolver.getProperty("port")));
+        redisManager.setExpire(1800);// 配置过期时间
+        // redisManager.setTimeout(timeout);
+        // redisManager.setPassword(password);
+        return redisManager;
+    }
+    /**
+     * cacheManager 缓存 redis实现
+     *
+     * @return
+     */
+    public RedisCacheManager cacheManager() {
+        RedisCacheManager redisCacheManager = new RedisCacheManager();
+        redisCacheManager.setRedisManager(redisManager());
+        return redisCacheManager;
+    }
+    /**
+     * RedisSessionDAO shiro sessionDao层的实现 通过redis
+     */
+    public RedisSessionDAO redisSessionDAO() {
+        RedisSessionDAO redisSessionDAO = new RedisSessionDAO();
+        redisSessionDAO.setRedisManager(redisManager());
+        return redisSessionDAO;
+    }
+    /**
+     * shiro session的管理
+     */
+    public DefaultWebSessionManager SessionManager() {
+        DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
+        sessionManager.setSessionDAO(redisSessionDAO());
+        return sessionManager;
     }
 
     /**
@@ -97,9 +157,14 @@ public class ShiroConfiguration {
         //设置realm
         securityManager.setRealm(realm);
         //用户授权/认证信息Cache, 采用EhCache缓存
-        securityManager.setCacheManager(getEhCacheManager());
+        //securityManager.setCacheManager(getEhCacheManager());
+        // 自定义缓存实现 使用redis
+        securityManager.setCacheManager(cacheManager());
+        // 自定义session管理 使用redis
+        securityManager.setSessionManager(SessionManager());
         //注入记住我管理器;
         securityManager.setRememberMeManager(rememberMeManager());
+
         return securityManager;
     }
 

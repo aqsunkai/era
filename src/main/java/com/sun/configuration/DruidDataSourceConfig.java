@@ -94,7 +94,7 @@ public class DruidDataSourceConfig implements EnvironmentAware {
 		BeanNameAutoProxyCreator beanNameAutoProxyCreator = new BeanNameAutoProxyCreator();
 		beanNameAutoProxyCreator.setProxyTargetClass(true);
 		// 设置要监控的bean的id
-		beanNameAutoProxyCreator.setBeanNames("sysRoleMapper","loginController");
+		//beanNameAutoProxyCreator.setBeanNames("sysRoleMapper","loginController");
 		beanNameAutoProxyCreator.setInterceptorNames("druid-stat-interceptor");
 		return beanNameAutoProxyCreator;
 	}

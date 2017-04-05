@@ -1,8 +1,14 @@
 package com.sun.permission.model;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class User {
+public class User implements Serializable{
+    /**
+     * 生成的serialVersionUID
+     */
+    private static final long serialVersionUID = 5231134212346077681L;
+
     private Integer id;
 
     private String nickname;

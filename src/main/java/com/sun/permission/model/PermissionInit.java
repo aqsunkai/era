@@ -1,6 +1,13 @@
 package com.sun.permission.model;
 
-public class PermissionInit {
+import java.io.Serializable;
+
+public class PermissionInit implements Serializable{
+    /**
+     * 生成的serialVersionUID
+     */
+    private static final long serialVersionUID = 4896534789126077681L;
+
     private Integer id;
 
     private String url;

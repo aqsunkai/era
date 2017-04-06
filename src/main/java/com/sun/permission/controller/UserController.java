@@ -7,6 +7,7 @@ import com.sun.permission.service.UserService;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -120,5 +121,11 @@ public class UserController {
     @RequestMapping("/excep")
     public void excep() throws Exception {
         throw new Exception("测试异常处理类");
+    }
+
+    @RequestMapping("/edit/{userid}")
+    public String getUserList(@PathVariable int userid){
+        logger.info("------进入用户信息修改-------");
+        return "user_edit";
     }
 }

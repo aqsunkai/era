@@ -1,5 +1,6 @@
 package com.sun.configuration;
 
+import org.apache.log4j.Logger;
 import org.apache.shiro.codec.Base64;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
@@ -31,6 +32,8 @@ import java.util.Map;
 @Configuration
 @EnableTransactionManagement
 public class ShiroConfiguration implements EnvironmentAware {
+
+    private final Logger logger = Logger.getLogger(ShiroConfiguration.class);
 
     private RelaxedPropertyResolver propertyResolver;
 
@@ -77,7 +80,7 @@ public class ShiroConfiguration implements EnvironmentAware {
         redisManager.setHost(propertyResolver.getProperty("host"));
         redisManager.setPort(Integer.valueOf(propertyResolver.getProperty("port")));
         redisManager.setExpire(1800);// 配置过期时间
-        // redisManager.setTimeout(timeout);
+        redisManager.setTimeout(Integer.valueOf(propertyResolver.getProperty("timeout")));
         // redisManager.setPassword(password);
         return redisManager;
     }
@@ -118,7 +121,6 @@ public class ShiroConfiguration implements EnvironmentAware {
         //System.out.println("ShiroConfiguration.rememberMeCookie()");
         //这个参数是cookie的名称，对应前端的checkbox的name = rememberMe
         SimpleCookie simpleCookie = new SimpleCookie("rememberMe");
-        simpleCookie.setHttpOnly(true);
         //<!-- 记住我cookie生效时间30天 ,单位秒;-->
         simpleCookie.setMaxAge(259200);
         return simpleCookie;
@@ -135,7 +137,7 @@ public class ShiroConfiguration implements EnvironmentAware {
         CookieRememberMeManager cookieRememberMeManager = new CookieRememberMeManager();
         cookieRememberMeManager.setCookie(rememberMeCookie());
         //rememberMe cookie加密的密钥 建议每个项目都不一样 默认AES算法 密钥长度(128 256 512 位)
-        cookieRememberMeManager.setCipherKey(Base64.decode("4AvVhmFLUs0KTA3Kprsdag=="));
+        cookieRememberMeManager.setCipherKey(Base64.decode("2AvVhdsgUs0FSA3SDFAdag=="));
         return cookieRememberMeManager;
     }
 
@@ -160,8 +162,8 @@ public class ShiroConfiguration implements EnvironmentAware {
         //securityManager.setCacheManager(getEhCacheManager());
         // 自定义缓存实现 使用redis
         securityManager.setCacheManager(cacheManager());
-        // 自定义session管理 使用redis
-        securityManager.setSessionManager(SessionManager());
+        // 自定义session管理 使用redis,注入这个会在退出时报错
+        //securityManager.setSessionManager(SessionManager());
         //注入记住我管理器;
         securityManager.setRememberMeManager(rememberMeManager());
 
@@ -185,6 +187,7 @@ public class ShiroConfiguration implements EnvironmentAware {
         factoryBean.setSuccessUrl("/welcome");
         factoryBean.setUnauthorizedUrl("/403");
         loadShiroFilterChain(factoryBean);
+        logger.info("shiro拦截器工厂类注入成功");
         return factoryBean;
     }
 
@@ -206,6 +209,7 @@ public class ShiroConfiguration implements EnvironmentAware {
         filterChainMap.put("/permission/userInsert", "anon");
         filterChainMap.put("/error", "anon");
         filterChainMap.put("/tUser/insert","anon");
+        filterChainMap.put("/gif/getGifCode","anon");
         filterChainMap.put("/**", "authc");
 
         factoryBean.setFilterChainDefinitionMap(filterChainMap);

@@ -23,8 +23,8 @@ import java.io.UnsupportedEncodingException;
  */
 @Controller
 @RequestMapping("/test")
-public class Test {
-    private static final Logger logger = LoggerFactory.getLogger(Test.class);
+public class TestController {
+    private static final Logger logger = LoggerFactory.getLogger(TestController.class);
     @Autowired
     private YmlConfig config;
     @Autowired
@@ -53,7 +53,7 @@ public class Test {
         System.out.println(req.getSession().getAttribute("currentUser"));
         User tUser = (User) req.getSession().getAttribute("currentUser");
         System.out.println(tUser.getId()+","+tUser.getNickname());
-        return "Hello World!";
+        return "Hello World!112222222";
     }
 
     public static void main(String[] args) {

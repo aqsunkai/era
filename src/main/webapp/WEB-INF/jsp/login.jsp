@@ -21,13 +21,15 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 	<script src="<%=basePath%>js/jquery-2.1.4/jquery.min.js"></script>
   </head>
   
-  <body style="text-align: center">
-     <h1>登录页面----</h1>
+  <body style="margin-left: 500px">
+     <h1 style="margin-left: 30px">登录页面----</h1>
      <form action="<%=basePath%>/login" method="post">
          用户名 : <input type="text" name="email" id="email"/><br>
          密码: <input type="password" name="pswd" id="pswd"/><br>
+         验证码：<input type="text" name="gifCode" id="gifCode"/>
+         <img alt="验证码" src="<%=basePath%>gif/getGifCode"><br>
          <input type="checkbox" name="rememberMe" />记住我<br>
-         <input type="submit" value="登录"/><input style="left: 50px" onclick="register()" type="button" value="注册"/>
+         <input style="margin-left: 100px" type="submit" value="登录"/><input style="left: 50px" onclick="register()" type="button" value="注册"/>
      </form>
      <h1 style="color: red">${message }</h1>
   </body>

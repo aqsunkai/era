@@ -90,7 +90,7 @@ spring:
         # 连接池中的最小空闲连接
         max-idle: 8
       # 连接超时时间（毫秒）
-      timeout: 2
+      timeout: 20
 # mybatis_config
 mybatis:
     mapper-locations: classpath:mapperXml/**/*.xml

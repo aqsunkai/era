@@ -38,5 +38,5 @@ proguard/
 # Others  
 .idea/
 *.iml
-README.md
+README.txt
 /target

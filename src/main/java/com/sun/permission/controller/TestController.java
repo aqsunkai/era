@@ -53,7 +53,7 @@ public class TestController {
         System.out.println(req.getSession().getAttribute("currentUser"));
         User tUser = (User) req.getSession().getAttribute("currentUser");
         System.out.println(tUser.getId()+","+tUser.getNickname());
-        return "Hello World!112222222";
+        return "Hello World!";
     }
 
     public static void main(String[] args) {

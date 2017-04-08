@@ -55,12 +55,6 @@ public class UserController {
 
         //验证log4j
         logger.info("哈哈哈");
-        //验证枚举
-        //System.out.println(thirdType.getCode());
-
-        //验证全局配置文件
-        /*System.out.println(properties.getProperty("csdn.url"));*/
-
         int userId = Integer.parseInt(request.getParameter("id"));
         User user = this.userService.selectByPrimaryKey(userId);
         model.addObject("user", user);

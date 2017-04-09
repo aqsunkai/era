@@ -128,6 +128,8 @@ public class LoginController {
             //把当前用户放入session
             User tUser = permissionService.findByUserEmail(email);
             session.setAttribute("currentUser",tUser);
+            //设置会话的过期时间--ms,默认是30分钟，设置负数表示永不过期
+            session.setTimeout(-1000l);
             return "/welcome";
         }else{
             token.clear();

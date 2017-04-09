@@ -3,7 +3,7 @@ package com.sun.permission.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.configuration.YmlConfig;
-import com.sun.permission.model.User;
+import com.sun.util.UserUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +32,6 @@ public class TestController {
     @Value("${age}")
     String name;
 
-
     @RequestMapping("/")
     @ResponseBody
     String home(HttpServletRequest req) throws JsonProcessingException, UnsupportedEncodingException {
@@ -50,9 +49,8 @@ public class TestController {
         System.out.println(env.getProperty("abc"));//null
         System.out.println(name);//26
 
-        System.out.println(req.getSession().getAttribute("currentUser"));
-        User tUser = (User) req.getSession().getAttribute("currentUser");
-        System.out.println(tUser.getId()+","+tUser.getNickname());
+        System.out.println(UserUtil.getCurrentUser());
+        System.out.println(UserUtil.getCurrentUserId()+","+UserUtil.getCurrentUser().getNickname());
         return "Hello World!";
     }
 

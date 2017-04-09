@@ -79,7 +79,7 @@ public class ShiroConfiguration implements EnvironmentAware {
         RedisManager redisManager = new RedisManager();
         redisManager.setHost(propertyResolver.getProperty("host"));
         redisManager.setPort(Integer.valueOf(propertyResolver.getProperty("port")));
-        redisManager.setExpire(1800);//配置过期时间
+        redisManager.setExpire(1800);//配置过期时间--30分钟
         redisManager.setTimeout(Integer.valueOf(propertyResolver.getProperty("timeout")));
         // redisManager.setPassword(password);
         return redisManager;
@@ -97,19 +97,19 @@ public class ShiroConfiguration implements EnvironmentAware {
     /**
      * RedisSessionDAO shiro sessionDao层的实现 通过redis
      */
-    public RedisSessionDAO redisSessionDAO() {
+    /*public RedisSessionDAO redisSessionDAO() {
         RedisSessionDAO redisSessionDAO = new RedisSessionDAO();
         redisSessionDAO.setRedisManager(redisManager());
         return redisSessionDAO;
-    }
+    }*/
     /**
      * shiro session的管理
      */
-    public DefaultWebSessionManager SessionManager() {
+    /*public DefaultWebSessionManager SessionManager() {
         DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
         sessionManager.setSessionDAO(redisSessionDAO());
         return sessionManager;
-    }
+    }*/
 
     /**
      * cookie对象;
@@ -162,7 +162,7 @@ public class ShiroConfiguration implements EnvironmentAware {
         //securityManager.setCacheManager(getEhCacheManager());
         // 自定义缓存实现 使用redis
         securityManager.setCacheManager(cacheManager());
-        // 自定义session管理 使用redis,注入这个会在退出时报错
+        // 自定义session管理 使用redis,注入这个会在退出时报错，好像是因为druid连接池的原因
         //securityManager.setSessionManager(SessionManager());
         //注入记住我管理器;
         securityManager.setRememberMeManager(rememberMeManager());
@@ -198,8 +198,7 @@ public class ShiroConfiguration implements EnvironmentAware {
         /**下面这些规则配置最好配置到配置文件中*/
         Map<String, String> filterChainMap = new LinkedHashMap<String, String>();
         //配置记住我或认证通过可以访问的地址
-        filterChainMap.put("/index", "user");
-        filterChainMap.put("/", "user");
+        //filterChainMap.put("/**", "user");
         /** authc：该过滤器下的页面必须验证后才能访问，它是Shiro内置的一个拦截器
          * org.apache.shiro.web.filter.authc.FormAuthenticationFilter */
         //filterChainMap.put("/tUser", "authc");//输入http://localhost:8080/myEra/tUser会跳到登录页面
@@ -210,8 +209,9 @@ public class ShiroConfiguration implements EnvironmentAware {
         filterChainMap.put("/error", "anon");
         filterChainMap.put("/tUser/insert","anon");
         filterChainMap.put("/gif/getGifCode","anon");
-        filterChainMap.put("/**", "authc");
-
+        //filterChainMap.put("/**", "authc");
+        //使用记住我可以访问的地址替换上面的，当没有记住我时跳转登录页面，记住我时跳到正常页面
+        filterChainMap.put("/**", "user");
         factoryBean.setFilterChainDefinitionMap(filterChainMap);
     }
 

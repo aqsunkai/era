@@ -7,6 +7,7 @@ import java.util.Map;
 public interface UserService {
 
     User selectByPrimaryKey(Integer id);
+    User selectByPrimaryKey1(Integer id);
 
     void insertSelective(User user);
 

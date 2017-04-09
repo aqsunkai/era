@@ -4,6 +4,7 @@ import com.sun.permission.mapper.UserMapper;
 import com.sun.permission.model.User;
 import com.sun.permission.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +17,14 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserMapper userMapper;
 
-    @Cacheable(value="common",key="'id_'+#id")
+    @Cacheable(value="common",key = "'id_'+#id")
     public User selectByPrimaryKey(Integer id) {
+        return userMapper.selectByPrimaryKey(id);
+    }
+
+    //测试删除缓存
+    @CacheEvict(value="common",key = "'id_'+#id")
+    public User selectByPrimaryKey1(Integer id) {
         return userMapper.selectByPrimaryKey(id);
     }
 

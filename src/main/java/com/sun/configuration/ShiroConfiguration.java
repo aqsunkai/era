@@ -79,7 +79,7 @@ public class ShiroConfiguration implements EnvironmentAware {
         RedisManager redisManager = new RedisManager();
         redisManager.setHost(propertyResolver.getProperty("host"));
         redisManager.setPort(Integer.valueOf(propertyResolver.getProperty("port")));
-        redisManager.setExpire(1800);// 配置过期时间
+        redisManager.setExpire(1800);//配置过期时间
         redisManager.setTimeout(Integer.valueOf(propertyResolver.getProperty("timeout")));
         // redisManager.setPassword(password);
         return redisManager;

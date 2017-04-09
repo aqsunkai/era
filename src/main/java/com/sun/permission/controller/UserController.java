@@ -61,6 +61,19 @@ public class UserController {
         model.setViewName("eagle/showUser");
         return model;
     }
+
+    @RequestMapping("/showUser1")
+    public ModelAndView showUser1(HttpServletRequest request) {
+        ModelAndView model = new ModelAndView();
+
+        //验证log4j
+        logger.info("哈哈哈");
+        int userId = Integer.parseInt(request.getParameter("id"));
+        User user = this.userService.selectByPrimaryKey1(userId);
+        model.addObject("user", user);
+        model.setViewName("eagle/showUser");
+        return model;
+    }
 //    @RequestMapping("/showUser")
 //    public Map<String, Object> toIndex(HttpServletRequest request){
 //    	Map<String, Object> map = new HashMap<String, Object>();

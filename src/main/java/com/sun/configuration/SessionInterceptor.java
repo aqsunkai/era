@@ -24,7 +24,6 @@ public class SessionInterceptor implements HandlerInterceptor{
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object o) throws Exception {
         logger.info("---preHandle---");
-        System.out.println(request.getContextPath());
         Subject currentUser = SecurityUtils.getSubject();
         //判断用户是通过记住我功能自动登录,此时session失效
         if(!currentUser.isAuthenticated() && currentUser.isRemembered()){

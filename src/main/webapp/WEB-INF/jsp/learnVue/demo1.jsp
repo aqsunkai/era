@@ -15,6 +15,11 @@
     <title>学习Vue.js</title>
     <link rel="stylesheet" type="text/css" href="<%=basePath%>sweetAlert/sweetalert.css">
 </head>
+<style>
+    #app-3{
+        color: red;
+    }
+</style>
 <body>
     <div id="app">
         {{ message }}<br>
@@ -89,7 +94,7 @@
     var app3 = new Vue({
         el:"#app-3",
         data:{
-            seen: false
+            seen: true
         }
     });
     var app4 = new Vue({

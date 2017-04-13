@@ -13,7 +13,7 @@
 <html>
 <head>
     <title>学习Vue.js</title>
-    <link rel="stylesheet" type="text/css" href="<%=basePath%>sweetAlert/sweetalert.css">
+    <link rel="stylesheet" type="text/css" href="<%=basePath%>sweetAlert/sweetalert2.min.css">
 </head>
 <style>
     #app-3{
@@ -74,7 +74,7 @@
         </p>
     </div>
 </body>
-<script src="<%=basePath%>sweetAlert/sweetalert.min.js"></script>
+<script src="<%=basePath%>sweetAlert/sweetalert2.min.js"></script>
 <script src="<%=basePath%>js/vue/vue.js"></script>
 <script>
     var app = new Vue({
@@ -154,10 +154,15 @@
         methods: {
             greet: function() {
                 // // 方法内 `this` 指向 vm
-                swal(this.message);
+                swal(this.message,"success");
             },
             say: function(msg) {
-                swal(msg,this.message,"success");
+                swal({
+                    text: msg,
+                    type: "success",
+                    confirmButtonText: '确认',
+                    confirmButtonColor: '#4cd964'
+                });
             }
         }
     });

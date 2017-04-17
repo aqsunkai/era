@@ -1,87 +1,571 @@
-'use strict';
+/*!
+ * sweetalert2 v6.6.0
+ * Released under the MIT License.
+ */
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+	typeof define === 'function' && define.amd ? define(factory) :
+	(global.Sweetalert2 = factory());
+}(this, (function () { 'use strict';
 
-import { defaultParams, sweetHTML } from './utils/default.js';
-import { swalPrefix, swalClasses, iconTypes } from './utils/classes.js';
-import { extend, colorLuminance } from './utils/utils.js';
-import * as dom from './utils/dom.js';
+var defaultParams = {
+  title: '',
+  titleText: '',
+  text: '',
+  html: '',
+  type: null,
+  customClass: '',
+  target: 'body',
+  animation: true,
+  allowOutsideClick: true,
+  allowEscapeKey: true,
+  allowEnterKey: true,
+  showConfirmButton: true,
+  showCancelButton: false,
+  preConfirm: null,
+  confirmButtonText: 'OK',
+  confirmButtonColor: '#3085d6',
+  confirmButtonClass: null,
+  cancelButtonText: 'Cancel',
+  cancelButtonColor: '#aaa',
+  cancelButtonClass: null,
+  buttonsStyling: true,
+  reverseButtons: false,
+  focusCancel: false,
+  showCloseButton: false,
+  showLoaderOnConfirm: false,
+  imageUrl: null,
+  imageWidth: null,
+  imageHeight: null,
+  imageClass: null,
+  timer: null,
+  width: 500,
+  padding: 20,
+  background: '#fff',
+  input: null,
+  inputPlaceholder: '',
+  inputValue: '',
+  inputOptions: {},
+  inputAutoTrim: true,
+  inputClass: null,
+  inputAttributes: {},
+  inputValidator: null,
+  progressSteps: [],
+  currentProgressStep: null,
+  progressStepsDistance: '40px',
+  onOpen: null,
+  onClose: null
+};
 
-var modalParams = extend({}, defaultParams);
+var swalPrefix = 'swal2-';
+
+var prefix = function prefix(items) {
+  var result = {};
+  for (var i in items) {
+    result[items[i]] = swalPrefix + items[i];
+  }
+  return result;
+};
+
+var swalClasses = prefix(['container', 'shown', 'iosfix', 'modal', 'overlay', 'fade', 'show', 'hide', 'noanimation', 'close', 'title', 'content', 'buttonswrapper', 'confirm', 'cancel', 'icon', 'image', 'input', 'file', 'range', 'select', 'radio', 'checkbox', 'textarea', 'inputerror', 'validationerror', 'progresssteps', 'activeprogressstep', 'progresscircle', 'progressline', 'loading', 'styled']);
+
+var iconTypes = prefix(['success', 'warning', 'info', 'question', 'error']);
+
+/*
+ * Set hover, active and focus-states for buttons (source: http://www.sitepoint.com/javascript-generate-lighter-darker-color)
+ */
+var colorLuminance = function colorLuminance(hex, lum) {
+  // Validate hex string
+  hex = String(hex).replace(/[^0-9a-f]/gi, '');
+  if (hex.length < 6) {
+    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+  }
+  lum = lum || 0;
+
+  // Convert to decimal and change luminosity
+  var rgb = '#';
+  for (var i = 0; i < 3; i++) {
+    var c = parseInt(hex.substr(i * 2, 2), 16);
+    c = Math.round(Math.min(Math.max(0, c + c * lum), 255)).toString(16);
+    rgb += ('00' + c).substr(c.length);
+  }
+
+  return rgb;
+};
+
+var uniqueArray = function uniqueArray(arr) {
+  var result = [];
+  for (var i in arr) {
+    if (result.indexOf(arr[i]) === -1) {
+      result.push(arr[i]);
+    }
+  }
+  return result;
+};
+
+/* global MouseEvent */
+
+// Remember state in cases where opening and handling a modal will fiddle with it.
+var states = {
+  previousWindowKeyDown: null,
+  previousActiveElement: null,
+  previousBodyPadding: null
+};
+
+/*
+ * Add modal + overlay to DOM
+ */
+var init = function init(params) {
+  if (typeof document === 'undefined') {
+    console.error('SweetAlert2 requires document to initialize');
+    return;
+  }
+
+  var container = document.createElement('div');
+  container.className = swalClasses.container;
+  container.innerHTML = sweetHTML;
+
+  var targetElement = document.querySelector(params.target);
+  if (!targetElement) {
+    console.warn('SweetAlert2: Can\'t find the target "' + params.target + '"');
+    targetElement = document.body;
+  }
+  targetElement.appendChild(container);
+
+  var modal = getModal();
+  var input = getChildByClass(modal, swalClasses.input);
+  var file = getChildByClass(modal, swalClasses.file);
+  var range = modal.querySelector('.' + swalClasses.range + ' input');
+  var rangeOutput = modal.querySelector('.' + swalClasses.range + ' output');
+  var select = getChildByClass(modal, swalClasses.select);
+  var checkbox = modal.querySelector('.' + swalClasses.checkbox + ' input');
+  var textarea = getChildByClass(modal, swalClasses.textarea);
+
+  input.oninput = function () {
+    sweetAlert.resetValidationError();
+  };
+
+  input.onkeydown = function (event) {
+    setTimeout(function () {
+      if (event.keyCode === 13 && params.allowEnterKey) {
+        event.stopPropagation();
+        sweetAlert.clickConfirm();
+      }
+    }, 0);
+  };
+
+  file.onchange = function () {
+    sweetAlert.resetValidationError();
+  };
+
+  range.oninput = function () {
+    sweetAlert.resetValidationError();
+    rangeOutput.value = range.value;
+  };
+
+  range.onchange = function () {
+    sweetAlert.resetValidationError();
+    range.previousSibling.value = range.value;
+  };
+
+  select.onchange = function () {
+    sweetAlert.resetValidationError();
+  };
+
+  checkbox.onchange = function () {
+    sweetAlert.resetValidationError();
+  };
+
+  textarea.oninput = function () {
+    sweetAlert.resetValidationError();
+  };
+
+  return modal;
+};
+
+/*
+ * Manipulate DOM
+ */
+
+var sweetHTML = ('\n <div role="dialog" aria-labelledby="' + swalClasses.title + '" aria-describedby="' + swalClasses.content + '" class="' + swalClasses.modal + '" tabindex="-1">\n   <ul class="' + swalClasses.progresssteps + '"></ul>\n   <div class="' + swalClasses.icon + ' ' + iconTypes.error + '">\n     <span class="swal2-x-mark"><span class="swal2-x-mark-line-left"></span><span class="swal2-x-mark-line-right"></span></span>\n   </div>\n   <div class="' + swalClasses.icon + ' ' + iconTypes.question + '">?</div>\n   <div class="' + swalClasses.icon + ' ' + iconTypes.warning + '">!</div>\n   <div class="' + swalClasses.icon + ' ' + iconTypes.info + '">i</div>\n   <div class="' + swalClasses.icon + ' ' + iconTypes.success + '">\n     <div class="swal2-success-circular-line-left"></div>\n     <span class="swal2-success-line-tip"></span> <span class="swal2-success-line-long"></span>\n     <div class="swal2-success-ring"></div> <div class="swal2-success-fix"></div>\n     <div class="swal2-success-circular-line-right"></div>\n   </div>\n   <img class="' + swalClasses.image + '">\n   <h2 class="' + swalClasses.title + '" id="' + swalClasses.title + '"></h2>\n   <div id="' + swalClasses.content + '" class="' + swalClasses.content + '"></div>\n   <input class="' + swalClasses.input + '">\n   <input type="file" class="' + swalClasses.file + '">\n   <div class="' + swalClasses.range + '">\n     <output></output>\n     <input type="range">\n   </div>\n   <select class="' + swalClasses.select + '"></select>\n   <div class="' + swalClasses.radio + '"></div>\n   <label for="' + swalClasses.checkbox + '" class="' + swalClasses.checkbox + '">\n     <input type="checkbox">\n   </label>\n   <textarea class="' + swalClasses.textarea + '"></textarea>\n   <div class="' + swalClasses.validationerror + '"></div>\n   <div class="' + swalClasses.buttonswrapper + '">\n     <button type="button" class="' + swalClasses.confirm + '">OK</button>\n     <button type="button" class="' + swalClasses.cancel + '">Cancel</button>\n   </div>\n   <button type="button" class="' + swalClasses.close + '" aria-label="Close this dialog">&times;</button>\n </div>\n').replace(/(^|\n)\s*/g, '');
+
+var getContainer = function getContainer() {
+  return document.body.querySelector('.' + swalClasses.container);
+};
+
+var getModal = function getModal() {
+  return getContainer() ? getContainer().querySelector('.' + swalClasses.modal) : null;
+};
+
+var getIcons = function getIcons() {
+  var modal = getModal();
+  return modal.querySelectorAll('.' + swalClasses.icon);
+};
+
+var elementByClass = function elementByClass(className) {
+  return getContainer() ? getContainer().querySelector('.' + className) : null;
+};
+
+var getTitle = function getTitle() {
+  return elementByClass(swalClasses.title);
+};
+
+var getContent = function getContent() {
+  return elementByClass(swalClasses.content);
+};
+
+var getImage = function getImage() {
+  return elementByClass(swalClasses.image);
+};
+
+var getButtonsWrapper = function getButtonsWrapper() {
+  return elementByClass(swalClasses.buttonswrapper);
+};
+
+var getProgressSteps = function getProgressSteps() {
+  return elementByClass(swalClasses.progresssteps);
+};
+
+var getValidationError = function getValidationError() {
+  return elementByClass(swalClasses.validationerror);
+};
+
+var getConfirmButton = function getConfirmButton() {
+  return elementByClass(swalClasses.confirm);
+};
+
+var getCancelButton = function getCancelButton() {
+  return elementByClass(swalClasses.cancel);
+};
+
+var getCloseButton = function getCloseButton() {
+  return elementByClass(swalClasses.close);
+};
+
+var getFocusableElements = function getFocusableElements(focusCancel) {
+  var buttons = [getConfirmButton(), getCancelButton()];
+  if (focusCancel) {
+    buttons.reverse();
+  }
+  var focusableElements = buttons.concat(Array.prototype.slice.call(getModal().querySelectorAll('button, input:not([type=hidden]), textarea, select, a, *[tabindex]:not([tabindex="-1"])')));
+  return uniqueArray(focusableElements);
+};
+
+var hasClass = function hasClass(elem, className) {
+  if (elem.classList) {
+    return elem.classList.contains(className);
+  }
+  return false;
+};
+
+var focusInput = function focusInput(input) {
+  input.focus();
+
+  // place cursor at end of text in text input
+  if (input.type !== 'file') {
+    // http://stackoverflow.com/a/2345915/1331425
+    var val = input.value;
+    input.value = '';
+    input.value = val;
+  }
+};
+
+var addClass = function addClass(elem, className) {
+  if (!elem || !className) {
+    return;
+  }
+  var classes = className.split(/\s+/).filter(Boolean);
+  classes.forEach(function (className) {
+    elem.classList.add(className);
+  });
+};
+
+var removeClass = function removeClass(elem, className) {
+  if (!elem || !className) {
+    return;
+  }
+  var classes = className.split(/\s+/).filter(Boolean);
+  classes.forEach(function (className) {
+    elem.classList.remove(className);
+  });
+};
+
+var getChildByClass = function getChildByClass(elem, className) {
+  for (var i = 0; i < elem.childNodes.length; i++) {
+    if (hasClass(elem.childNodes[i], className)) {
+      return elem.childNodes[i];
+    }
+  }
+};
+
+var show = function show(elem, display) {
+  if (!display) {
+    display = 'block';
+  }
+  elem.style.opacity = '';
+  elem.style.display = display;
+};
+
+var hide = function hide(elem) {
+  elem.style.opacity = '';
+  elem.style.display = 'none';
+};
+
+var empty = function empty(elem) {
+  while (elem.firstChild) {
+    elem.removeChild(elem.firstChild);
+  }
+};
+
+// borrowed from jqeury $(elem).is(':visible') implementation
+var isVisible = function isVisible(elem) {
+  return elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length;
+};
+
+var removeStyleProperty = function removeStyleProperty(elem, property) {
+  if (elem.style.removeProperty) {
+    elem.style.removeProperty(property);
+  } else {
+    elem.style.removeAttribute(property);
+  }
+};
+
+var fireClick = function fireClick(node) {
+  if (!isVisible(node)) {
+    return false;
+  }
+
+  // Taken from http://www.nonobtrusive.com/2011/11/29/programatically-fire-crossbrowser-click-event-with-javascript/
+  // Then fixed for today's Chrome browser.
+  if (typeof MouseEvent === 'function') {
+    // Up-to-date approach
+    var mevt = new MouseEvent('click', {
+      view: window,
+      bubbles: false,
+      cancelable: true
+    });
+    node.dispatchEvent(mevt);
+  } else if (document.createEvent) {
+    // Fallback
+    var evt = document.createEvent('MouseEvents');
+    evt.initEvent('click', false, false);
+    node.dispatchEvent(evt);
+  } else if (document.createEventObject) {
+    node.fireEvent('onclick');
+  } else if (typeof node.onclick === 'function') {
+    node.onclick();
+  }
+};
+
+var animationEndEvent = function () {
+  var testEl = document.createElement('div');
+  var transEndEventNames = {
+    'WebkitAnimation': 'webkitAnimationEnd',
+    'OAnimation': 'oAnimationEnd oanimationend',
+    'msAnimation': 'MSAnimationEnd',
+    'animation': 'animationend'
+  };
+  for (var i in transEndEventNames) {
+    if (transEndEventNames.hasOwnProperty(i) && testEl.style[i] !== undefined) {
+      return transEndEventNames[i];
+    }
+  }
+
+  return false;
+}();
+
+// Reset previous window keydown handler and focued element
+var resetPrevState = function resetPrevState() {
+  window.onkeydown = states.previousWindowKeyDown;
+  if (states.previousActiveElement && states.previousActiveElement.focus) {
+    var x = window.scrollX;
+    var y = window.scrollY;
+    states.previousActiveElement.focus();
+    if (x && y) {
+      // IE has no scrollX/scrollY support
+      window.scrollTo(x, y);
+    }
+  }
+};
+
+// Measure width of scrollbar
+// https://github.com/twbs/bootstrap/blob/master/js/modal.js#L279-L286
+var measureScrollbar = function measureScrollbar() {
+  var supportsTouch = 'ontouchstart' in window || navigator.msMaxTouchPoints;
+  if (supportsTouch) {
+    return 0;
+  }
+  var scrollDiv = document.createElement('div');
+  scrollDiv.style.width = '50px';
+  scrollDiv.style.height = '50px';
+  scrollDiv.style.overflow = 'scroll';
+  document.body.appendChild(scrollDiv);
+  var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
+  document.body.removeChild(scrollDiv);
+  return scrollbarWidth;
+};
+
+// JavaScript Debounce Function
+// Simplivied version of https://davidwalsh.name/javascript-debounce-function
+var debounce = function debounce(func, wait) {
+  var timeout = void 0;
+  return function () {
+    var later = function later() {
+      timeout = null;
+      func();
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
+
+var modalParams = _extends({}, defaultParams);
+var queue = [];
+var swal2Observer = void 0;
 
 /*
  * Set type, text and actions on modal
  */
-var setParameters = function(params) {
-  var i;
-  var modal = dom.getModal();
+var setParameters = function setParameters(params) {
+  var modal = getModal() || init(params);
 
-  // set modal width, padding and margin-left
-  modal.style.width = params.width + 'px';
+  for (var param in params) {
+    if (!defaultParams.hasOwnProperty(param) && param !== 'extraParams') {
+      console.warn('SweetAlert2: Unknown parameter "' + param + '"');
+    }
+  }
+
+  // set modal width and margin-left
+  modal.style.width = typeof params.width === 'number' ? params.width + 'px' : params.width;
+
   modal.style.padding = params.padding + 'px';
-  modal.style.marginLeft = -params.width / 2 + 'px';
   modal.style.background = params.background;
+  var successIconParts = modal.querySelectorAll('[class^=swal2-success-circular-line], .swal2-success-fix');
+  for (var i = 0; i < successIconParts.length; i++) {
+    successIconParts[i].style.background = params.background;
+  }
 
-  // add dynamic media query css
-  var head = document.getElementsByTagName('head')[0];
-  var cssNode = document.createElement('style');
-  cssNode.type = 'text/css';
-  cssNode.id = dom.mediaqueryId;
-  var margin = 5; // %
-  var mediaQueryMaxWidth = params.width + parseInt(params.width * (margin/100) * 2, 10);
-  cssNode.innerHTML =
-    '@media screen and (max-width: ' + mediaQueryMaxWidth + 'px) {' +
-      '.' + swalClasses.modal + ' {' +
-        'width: auto !important;' +
-        'left: ' + margin + '% !important;' +
-        'right: ' + margin + '% !important;' +
-        'margin-left: 0 !important;' +
-      '}' +
-    '}';
-  head.appendChild(cssNode);
-
-  var $title = modal.querySelector('h2');
-  var $content = modal.querySelector('.' + swalClasses.content);
-  var $confirmBtn = dom.getConfirmButton();
-  var $cancelBtn = dom.getCancelButton();
-  var $spacer = modal.querySelector('.' + swalClasses.spacer);
-  var $closeButton = modal.querySelector('.' + swalClasses.close);
+  var title = getTitle();
+  var content = getContent();
+  var buttonsWrapper = getButtonsWrapper();
+  var confirmButton = getConfirmButton();
+  var cancelButton = getCancelButton();
+  var closeButton = getCloseButton();
 
   // Title
-  $title.innerHTML = params.title.split('\n').join('<br>');
+  if (params.titleText) {
+    title.innerText = params.titleText;
+  } else {
+    title.innerHTML = params.title.split('\n').join('<br>');
+  }
 
   // Content
   if (params.text || params.html) {
-    if (typeof params.html === 'object') {
-      $content.innerHTML = '';
+    if (_typeof(params.html) === 'object') {
+      content.innerHTML = '';
       if (0 in params.html) {
-        for (i = 0; i in params.html; i++) {
-          $content.appendChild(params.html[i]);
+        for (var _i = 0; _i in params.html; _i++) {
+          content.appendChild(params.html[_i].cloneNode(true));
         }
       } else {
-        $content.appendChild(params.html);
+        content.appendChild(params.html.cloneNode(true));
       }
-    } else {
-      $content.innerHTML = params.html || (params.text.split('\n').join('<br>'));
+    } else if (params.html) {
+      content.innerHTML = params.html;
+    } else if (params.text) {
+      content.textContent = params.text;
     }
-    dom.show($content);
+    show(content);
   } else {
-    dom.hide($content);
+    hide(content);
   }
 
   // Close button
   if (params.showCloseButton) {
-    dom.show($closeButton);
+    show(closeButton);
   } else {
-    dom.hide($closeButton);
+    hide(closeButton);
   }
 
   // Custom Class
   modal.className = swalClasses.modal;
   if (params.customClass) {
-    dom.addClass(modal, params.customClass);
+    addClass(modal, params.customClass);
+  }
+
+  // Progress steps
+  var progressStepsContainer = getProgressSteps();
+  var currentProgressStep = parseInt(params.currentProgressStep === null ? sweetAlert.getQueueStep() : params.currentProgressStep, 10);
+  if (params.progressSteps.length) {
+    show(progressStepsContainer);
+    empty(progressStepsContainer);
+    if (currentProgressStep >= params.progressSteps.length) {
+      console.warn('SweetAlert2: Invalid currentProgressStep parameter, it should be less than progressSteps.length ' + '(currentProgressStep like JS arrays starts from 0)');
+    }
+    params.progressSteps.forEach(function (step, index) {
+      var circle = document.createElement('li');
+      addClass(circle, swalClasses.progresscircle);
+      circle.innerHTML = step;
+      if (index === currentProgressStep) {
+        addClass(circle, swalClasses.activeprogressstep);
+      }
+      progressStepsContainer.appendChild(circle);
+      if (index !== params.progressSteps.length - 1) {
+        var line = document.createElement('li');
+        addClass(line, swalClasses.progressline);
+        line.style.width = params.progressStepsDistance;
+        progressStepsContainer.appendChild(line);
+      }
+    });
+  } else {
+    hide(progressStepsContainer);
   }
 
   // Icon
-  dom.hide(modal.querySelectorAll('.' + swalClasses.icon));
+  var icons = getIcons();
+  for (var _i2 = 0; _i2 < icons.length; _i2++) {
+    hide(icons[_i2]);
+  }
   if (params.type) {
     var validType = false;
     for (var iconType in iconTypes) {
@@ -91,164 +575,221 @@ var setParameters = function(params) {
       }
     }
     if (!validType) {
-      console.error('Unknown alert type: ' + params.type);
+      console.error('SweetAlert2: Unknown alert type: ' + params.type);
       return false;
     }
-    var $icon = modal.querySelector('.' + swalClasses.icon + '.' + iconTypes[params.type]);
-    dom.show($icon);
+    var icon = modal.querySelector('.' + swalClasses.icon + '.' + iconTypes[params.type]);
+    show(icon);
 
     // Animate icon
-    switch (params.type) {
-      case 'success':
-        dom.addClass($icon, 'animate');
-        dom.addClass($icon.querySelector('.tip'), 'animate-success-tip');
-        dom.addClass($icon.querySelector('.long'), 'animate-success-long');
-        break;
-      case 'error':
-        dom.addClass($icon, 'animate-error-icon');
-        dom.addClass($icon.querySelector('.x-mark'), 'animate-x-mark');
-        break;
-      case 'warning':
-        dom.addClass($icon, 'pulse-warning');
-        break;
-      default:
-        break;
+    if (params.animation) {
+      switch (params.type) {
+        case 'success':
+          addClass(icon, 'swal2-animate-success-icon');
+          addClass(icon.querySelector('.swal2-success-line-tip'), 'swal2-animate-success-line-tip');
+          addClass(icon.querySelector('.swal2-success-line-long'), 'swal2-animate-success-line-long');
+          break;
+        case 'error':
+          addClass(icon, 'swal2-animate-error-icon');
+          addClass(icon.querySelector('.swal2-x-mark'), 'swal2-animate-x-mark');
+          break;
+        default:
+          break;
+      }
     }
-
   }
 
   // Custom image
-  var $customImage = modal.querySelector('.' + swalClasses.image);
+  var image = getImage();
   if (params.imageUrl) {
-    $customImage.setAttribute('src', params.imageUrl);
-    dom.show($customImage);
+    image.setAttribute('src', params.imageUrl);
+    show(image);
 
     if (params.imageWidth) {
-      $customImage.setAttribute('width', params.imageWidth);
+      image.setAttribute('width', params.imageWidth);
+    } else {
+      image.removeAttribute('width');
     }
 
     if (params.imageHeight) {
-      $customImage.setAttribute('height', params.imageHeight);
+      image.setAttribute('height', params.imageHeight);
+    } else {
+      image.removeAttribute('height');
     }
 
+    image.className = swalClasses.image;
     if (params.imageClass) {
-      dom.addClass($customImage, params.imageClass);
+      addClass(image, params.imageClass);
     }
   } else {
-    dom.hide($customImage);
+    hide(image);
   }
 
   // Cancel button
   if (params.showCancelButton) {
-    $cancelBtn.style.display = 'inline-block';
+    cancelButton.style.display = 'inline-block';
   } else {
-    dom.hide($cancelBtn);
+    hide(cancelButton);
   }
 
   // Confirm button
   if (params.showConfirmButton) {
-    dom.removeStyleProperty($confirmBtn, 'display');
+    removeStyleProperty(confirmButton, 'display');
   } else {
-    dom.hide($confirmBtn);
+    hide(confirmButton);
   }
 
-  // Buttons spacer
+  // Buttons wrapper
   if (!params.showConfirmButton && !params.showCancelButton) {
-    dom.hide($spacer);
+    hide(buttonsWrapper);
   } else {
-    dom.show($spacer);
+    show(buttonsWrapper);
   }
 
   // Edit text on cancel and confirm buttons
-  $confirmBtn.innerHTML = params.confirmButtonText;
-  $cancelBtn.innerHTML = params.cancelButtonText;
+  confirmButton.innerHTML = params.confirmButtonText;
+  cancelButton.innerHTML = params.cancelButtonText;
 
   // Set buttons to selected background colors
   if (params.buttonsStyling) {
-    $confirmBtn.style.backgroundColor = params.confirmButtonColor;
-    $cancelBtn.style.backgroundColor = params.cancelButtonColor;
+    confirmButton.style.backgroundColor = params.confirmButtonColor;
+    cancelButton.style.backgroundColor = params.cancelButtonColor;
   }
 
   // Add buttons custom classes
-  $confirmBtn.className = swalClasses.confirm;
-  dom.addClass($confirmBtn, params.confirmButtonClass);
-  $cancelBtn.className = swalClasses.cancel;
-  dom.addClass($cancelBtn, params.cancelButtonClass);
+  confirmButton.className = swalClasses.confirm;
+  addClass(confirmButton, params.confirmButtonClass);
+  cancelButton.className = swalClasses.cancel;
+  addClass(cancelButton, params.cancelButtonClass);
 
   // Buttons styling
   if (params.buttonsStyling) {
-    dom.addClass($confirmBtn, 'styled');
-    dom.addClass($cancelBtn, 'styled');
+    addClass(confirmButton, swalClasses.styled);
+    addClass(cancelButton, swalClasses.styled);
   } else {
-    dom.removeClass($confirmBtn, 'styled');
-    dom.removeClass($cancelBtn, 'styled');
+    removeClass(confirmButton, swalClasses.styled);
+    removeClass(cancelButton, swalClasses.styled);
 
-    $confirmBtn.style.backgroundColor = $confirmBtn.style.borderLeftColor = $confirmBtn.style.borderRightColor = '';
-    $cancelBtn.style.backgroundColor = $cancelBtn.style.borderLeftColor = $cancelBtn.style.borderRightColor = '';
+    confirmButton.style.backgroundColor = confirmButton.style.borderLeftColor = confirmButton.style.borderRightColor = '';
+    cancelButton.style.backgroundColor = cancelButton.style.borderLeftColor = cancelButton.style.borderRightColor = '';
   }
 
   // CSS animation
   if (params.animation === true) {
-    dom.removeClass(modal, 'no-animation');
+    removeClass(modal, swalClasses.noanimation);
   } else {
-    dom.addClass(modal, 'no-animation');
+    addClass(modal, swalClasses.noanimation);
   }
 };
 
 /*
  * Animations
  */
-var openModal = function(animation) {
-  var modal = dom.getModal();
+var openModal = function openModal(animation, onComplete) {
+  var container = getContainer();
+  var modal = getModal();
+
   if (animation) {
-    dom.fadeIn(dom.getOverlay(), 10);
-    dom.addClass(modal, 'show-swal2');
-    dom.removeClass(modal, 'hide-swal2');
+    addClass(modal, swalClasses.show);
+    addClass(container, swalClasses.fade);
+    removeClass(modal, swalClasses.hide);
   } else {
-    dom.show(dom.getOverlay());
+    removeClass(modal, swalClasses.fade);
   }
-  dom.show(modal);
+  show(modal);
 
-  dom.states.previousActiveElement = document.activeElement;
+  // scrolling is 'hidden' until animation is done, after that 'auto'
+  container.style.overflowY = 'hidden';
+  if (animationEndEvent && !hasClass(modal, swalClasses.noanimation)) {
+    modal.addEventListener(animationEndEvent, function swalCloseEventFinished() {
+      modal.removeEventListener(animationEndEvent, swalCloseEventFinished);
+      container.style.overflowY = 'auto';
+    });
+  } else {
+    container.style.overflowY = 'auto';
+  }
 
-  dom.addClass(modal, 'visible');
+  addClass(document.documentElement, swalClasses.shown);
+  addClass(document.body, swalClasses.shown);
+  addClass(container, swalClasses.shown);
+  fixScrollbar();
+  iOSfix();
+  states.previousActiveElement = document.activeElement;
+  if (onComplete !== null && typeof onComplete === 'function') {
+    setTimeout(function () {
+      onComplete(modal);
+    });
+  }
 };
 
-/*
- * Set 'margin-top'-property on modal based on its computed height
- */
-var fixVerticalPosition = function() {
-  var modal = dom.getModal();
-
-  modal.style.marginTop = dom.getTopMargin(modal);
+var fixScrollbar = function fixScrollbar() {
+  // for queues, do not do this more than once
+  if (states.previousBodyPadding !== null) {
+    return;
+  }
+  // if the body has overflow
+  if (document.body.scrollHeight > window.innerHeight) {
+    // add padding so the content doesn't shift after removal of scrollbar
+    states.previousBodyPadding = document.body.style.paddingRight;
+    document.body.style.paddingRight = measureScrollbar() + 'px';
+  }
 };
 
-function modalDependant() {
+var undoScrollbar = function undoScrollbar() {
+  if (states.previousBodyPadding !== null) {
+    document.body.style.paddingRight = states.previousBodyPadding;
+    states.previousBodyPadding = null;
+  }
+};
 
-  if (arguments[0] === undefined) {
-    console.error('sweetAlert2 expects at least 1 attribute!');
+// Fix iOS scrolling http://stackoverflow.com/q/39626302/1331425
+var iOSfix = function iOSfix() {
+  var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (iOS && !hasClass(document.body, swalClasses.iosfix)) {
+    var offset = document.body.scrollTop;
+    document.body.style.top = offset * -1 + 'px';
+    addClass(document.body, swalClasses.iosfix);
+  }
+};
+
+var undoIOSfix = function undoIOSfix() {
+  if (hasClass(document.body, swalClasses.iosfix)) {
+    var offset = parseInt(document.body.style.top, 10);
+    removeClass(document.body, swalClasses.iosfix);
+    document.body.style.top = '';
+    document.body.scrollTop = offset * -1;
+  }
+};
+
+// SweetAlert entry point
+var sweetAlert = function sweetAlert() {
+  for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  if (args[0] === undefined) {
+    console.error('SweetAlert2 expects at least 1 attribute!');
     return false;
   }
 
-  var params = extend({}, modalParams);
+  var params = _extends({}, modalParams);
 
-  switch (typeof arguments[0]) {
-
+  switch (_typeof(args[0])) {
     case 'string':
-      params.title = arguments[0];
-      params.text  = arguments[1] || '';
-      params.type  = arguments[2] || '';
+      params.title = args[0];
+      params.html = args[1];
+      params.type = args[2];
 
       break;
 
     case 'object':
-      extend(params, arguments[0]);
-      params.extraParams = arguments[0].extraParams;
+      _extends(params, args[0]);
+      params.extraParams = args[0].extraParams;
 
       if (params.input === 'email' && params.inputValidator === null) {
-        params.inputValidator = function(email) {
-          return new Promise(function(resolve, reject) {
-            var emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+        params.inputValidator = function (email) {
+          return new Promise(function (resolve, reject) {
+            var emailRegex = /^[a-zA-Z0-9.+_-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
             if (emailRegex.test(email)) {
               resolve();
             } else {
@@ -258,47 +799,67 @@ function modalDependant() {
         };
       }
 
+      if (params.input === 'url' && params.inputValidator === null) {
+        params.inputValidator = function (url) {
+          return new Promise(function (resolve, reject) {
+            var urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+            if (urlRegex.test(url)) {
+              resolve();
+            } else {
+              reject('Invalid URL');
+            }
+          });
+        };
+      }
       break;
 
     default:
-      console.error('Unexpected type of argument! Expected "string" or "object", got ' + typeof arguments[0]);
+      console.error('SweetAlert2: Unexpected type of argument! Expected "string" or "object", got ' + _typeof(args[0]));
       return false;
   }
 
   setParameters(params);
-  fixVerticalPosition();
-  openModal(params.animation);
 
-  // Modal interactions
-  var modal = dom.getModal();
+  var container = getContainer();
+  var modal = getModal();
 
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve, reject) {
     // Close on timer
     if (params.timer) {
-      modal.timeout = setTimeout(function() {
-        sweetAlert.closeModal();
-        resolve(undefined);
+      modal.timeout = setTimeout(function () {
+        sweetAlert.closeModal(params.onClose);
+        reject('timer');
       }, params.timer);
     }
 
-    // input/select autofocus
-    var getInput = function() {
-      switch (params.input) {
+    // Get input element by specified type or, if type isn't specified, by params.input
+    var getInput = function getInput(inputType) {
+      inputType = inputType || params.input;
+      if (!inputType) {
+        return null;
+      }
+      switch (inputType) {
         case 'select':
-          return dom.getChildByClass(modal, swalClasses.select);
-        case 'radio':
-          return modal.querySelector('.' + swalClasses.radio + ' input:checked') ||
-            modal.querySelector('.' + swalClasses.radio + ' input:first-child');
-        case 'checkbox':
-          return modal.querySelector('#' + swalClasses.checkbox);
         case 'textarea':
-          return dom.getChildByClass(modal, swalClasses.textarea);
+        case 'file':
+          return getChildByClass(modal, swalClasses[inputType]);
+        case 'checkbox':
+          return modal.querySelector('.' + swalClasses.checkbox + ' input');
+        case 'radio':
+          return modal.querySelector('.' + swalClasses.radio + ' input:checked') || modal.querySelector('.' + swalClasses.radio + ' input:first-child');
+        case 'range':
+          return modal.querySelector('.' + swalClasses.range + ' input');
         default:
-          return dom.getChildByClass(modal, swalClasses.input);
+          return getChildByClass(modal, swalClasses.input);
       }
     };
-    var getInputValue = function() {
+
+    // Get the value of the modal input
+    var getInputValue = function getInputValue() {
       var input = getInput();
+      if (!input) {
+        return null;
+      }
       switch (params.input) {
         case 'checkbox':
           return input.checked ? 1 : 0;
@@ -307,184 +868,178 @@ function modalDependant() {
         case 'file':
           return input.files.length ? input.files[0] : null;
         default:
-          return params.inputAutoTrim? input.value.trim() : input.value;
+          return params.inputAutoTrim ? input.value.trim() : input.value;
       }
     };
 
+    // input autofocus
     if (params.input) {
-      setTimeout(function() {
+      setTimeout(function () {
         var input = getInput();
         if (input) {
-          dom.focusInput(input);
+          focusInput(input);
         }
       }, 0);
     }
 
-    var confirm = function(value) {
+    var confirm = function confirm(value) {
       if (params.showLoaderOnConfirm) {
         sweetAlert.showLoading();
       }
 
       if (params.preConfirm) {
-        params.preConfirm(value, params.extraParams).then(
-          function(preConfirmValue) {
-            resolve(preConfirmValue || value);
-            sweetAlert.closeModal();
-          },
-          function() {
-            sweetAlert.hideLoading();
+        params.preConfirm(value, params.extraParams).then(function (preConfirmValue) {
+          sweetAlert.closeModal(params.onClose);
+          resolve(preConfirmValue || value);
+        }, function (error) {
+          sweetAlert.hideLoading();
+          if (error) {
+            sweetAlert.showValidationError(error);
           }
-        );
+        });
       } else {
+        sweetAlert.closeModal(params.onClose);
         resolve(value);
-        sweetAlert.closeModal();
       }
     };
 
     // Mouse interactions
-    var onButtonEvent = function(event) {
+    var onButtonEvent = function onButtonEvent(event) {
       var e = event || window.event;
       var target = e.target || e.srcElement;
-      var targetedConfirm = dom.hasClass(target, swalClasses.confirm);
-      var targetedCancel  = dom.hasClass(target, swalClasses.cancel);
-      var modalIsVisible  = dom.hasClass(modal, 'visible');
+      var confirmButton = getConfirmButton();
+      var cancelButton = getCancelButton();
+      var targetedConfirm = confirmButton && (confirmButton === target || confirmButton.contains(target));
+      var targetedCancel = cancelButton && (cancelButton === target || cancelButton.contains(target));
 
       switch (e.type) {
         case 'mouseover':
         case 'mouseup':
-        case 'focus':
           if (params.buttonsStyling) {
             if (targetedConfirm) {
-              target.style.backgroundColor = colorLuminance(params.confirmButtonColor, -0.1);
+              confirmButton.style.backgroundColor = colorLuminance(params.confirmButtonColor, -0.1);
             } else if (targetedCancel) {
-              target.style.backgroundColor = colorLuminance(params.cancelButtonColor, -0.1);
+              cancelButton.style.backgroundColor = colorLuminance(params.cancelButtonColor, -0.1);
             }
           }
           break;
         case 'mouseout':
-        case 'blur':
           if (params.buttonsStyling) {
             if (targetedConfirm) {
-              target.style.backgroundColor = params.confirmButtonColor;
+              confirmButton.style.backgroundColor = params.confirmButtonColor;
             } else if (targetedCancel) {
-              target.style.backgroundColor = params.cancelButtonColor;
+              cancelButton.style.backgroundColor = params.cancelButtonColor;
             }
           }
           break;
         case 'mousedown':
           if (params.buttonsStyling) {
             if (targetedConfirm) {
-              target.style.backgroundColor = colorLuminance(params.confirmButtonColor, -0.2);
+              confirmButton.style.backgroundColor = colorLuminance(params.confirmButtonColor, -0.2);
             } else if (targetedCancel) {
-              target.style.backgroundColor = colorLuminance(params.cancelButtonColor, -0.2);
+              cancelButton.style.backgroundColor = colorLuminance(params.cancelButtonColor, -0.2);
             }
           }
           break;
         case 'click':
           // Clicked 'confirm'
-          if (targetedConfirm && modalIsVisible) {
+          if (targetedConfirm && sweetAlert.isVisible()) {
+            sweetAlert.disableButtons();
             if (params.input) {
               var inputValue = getInputValue();
 
               if (params.inputValidator) {
                 sweetAlert.disableInput();
-                params.inputValidator(inputValue, params.extraParams).then(
-                  function() {
-                    sweetAlert.enableInput();
-                    confirm(inputValue);
-                  },
-                  function(error) {
-                    sweetAlert.enableInput();
+                params.inputValidator(inputValue, params.extraParams).then(function () {
+                  sweetAlert.enableButtons();
+                  sweetAlert.enableInput();
+                  confirm(inputValue);
+                }, function (error) {
+                  sweetAlert.enableButtons();
+                  sweetAlert.enableInput();
+                  if (error) {
                     sweetAlert.showValidationError(error);
                   }
-                );
+                });
               } else {
                 confirm(inputValue);
               }
-
             } else {
               confirm(true);
             }
 
-          // Clicked 'cancel'
-          } else if (targetedCancel && modalIsVisible) {
-
-            sweetAlert.closeModal();
-            resolve(false);
+            // Clicked 'cancel'
+          } else if (targetedCancel && sweetAlert.isVisible()) {
+            sweetAlert.disableButtons();
+            sweetAlert.closeModal(params.onClose);
+            reject('cancel');
           }
-
           break;
         default:
       }
     };
 
-    var $buttons = modal.querySelectorAll('button');
-    var i;
-    for (i = 0; i < $buttons.length; i++) {
-      $buttons[i].onclick     = onButtonEvent;
-      $buttons[i].onmouseover = onButtonEvent;
-      $buttons[i].onmouseout  = onButtonEvent;
-      $buttons[i].onmousedown = onButtonEvent;
+    var buttons = modal.querySelectorAll('button');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].onclick = onButtonEvent;
+      buttons[i].onmouseover = onButtonEvent;
+      buttons[i].onmouseout = onButtonEvent;
+      buttons[i].onmousedown = onButtonEvent;
     }
 
-    // Remember the current document.onclick event.
-    dom.states.previousDocumentClick = document.onclick;
-    document.onclick = function(event) {
-      var e = event || window.event;
-      var target = e.target || e.srcElement;
+    // Closing modal by close button
+    getCloseButton().onclick = function () {
+      sweetAlert.closeModal(params.onClose);
+      reject('close');
+    };
 
-      if (dom.hasClass(target, swalClasses.close) || (target === dom.getOverlay() && params.allowOutsideClick)) {
-        sweetAlert.closeModal();
-        resolve(undefined);
+    // Closing modal by overlay click
+    container.onclick = function (e) {
+      if (e.target !== container) {
+        return;
+      }
+      if (params.allowOutsideClick) {
+        sweetAlert.closeModal(params.onClose);
+        reject('overlay');
       }
     };
 
-    // Keyboard interactions
-    var $confirmButton = dom.getConfirmButton();
-    var $cancelButton = dom.getCancelButton();
-    var $modalElements = [$confirmButton, $cancelButton].concat(Array.prototype.slice.call(
-      modal.querySelectorAll('button:not([class^=' + swalPrefix + ']), input:not([type=hidden]), textarea, select')
-    ));
-    for (i = 0; i < $modalElements.length; i++) {
-      $modalElements[i].onfocus = onButtonEvent;
-      $modalElements[i].onblur = onButtonEvent;
-    }
+    var buttonsWrapper = getButtonsWrapper();
+    var confirmButton = getConfirmButton();
+    var cancelButton = getCancelButton();
 
-    // Reverse buttons if neede d
+    // Reverse buttons (Confirm on the right side)
     if (params.reverseButtons) {
-      $confirmButton.parentNode.insertBefore($cancelButton, $confirmButton);
+      confirmButton.parentNode.insertBefore(cancelButton, confirmButton);
+    } else {
+      confirmButton.parentNode.insertBefore(confirmButton, cancelButton);
     }
 
-    function setFocus(index, increment) {
+    // Focus handling
+    var setFocus = function setFocus(index, increment) {
+      var focusableElements = getFocusableElements(params.focusCancel);
       // search for visible elements and select the next possible match
-      for (var i = 0; i < $modalElements.length; i++) {
+      for (var _i3 = 0; _i3 < focusableElements.length; _i3++) {
         index = index + increment;
 
         // rollover to first item
-        if (index === $modalElements.length) {
+        if (index === focusableElements.length) {
           index = 0;
 
-        // go to last item
+          // go to last item
         } else if (index === -1) {
-          index = $modalElements.length - 1;
+          index = focusableElements.length - 1;
         }
 
-        // determine if element is visible, the following is borrowed from jqeury $(elem).is(':visible') implementation
-        if (
-          $modalElements[index].offsetWidth ||
-          $modalElements[index].offsetHeight ||
-          $modalElements[index].getClientRects().length
-        ) {
-          $modalElements[index].focus();
-          return;
+        // determine if element is visible
+        var el = focusableElements[index];
+        if (isVisible(el)) {
+          return el.focus();
         }
       }
-    }
+    };
 
-    // Focus the first element (input or button)
-    setFocus(-1, 1);
-
-    function handleKeyDown(event) {
+    var handleKeyDown = function handleKeyDown(event) {
       var e = event || window.event;
       var keyCode = e.keyCode || e.which;
 
@@ -493,12 +1048,13 @@ function modalDependant() {
         return;
       }
 
-      var $targetElement = e.target || e.srcElement;
+      var targetElement = e.target || e.srcElement;
 
+      var focusableElements = getFocusableElements(params.focusCancel);
       var btnIndex = -1; // Find the button - note, this is a nodelist, not an array.
-      for (var i = 0; i < $modalElements.length; i++) {
-        if ($targetElement === $modalElements[i]) {
-          btnIndex = i;
+      for (var _i4 = 0; _i4 < focusableElements.length; _i4++) {
+        if (targetElement === focusableElements[_i4]) {
+          btnIndex = _i4;
           break;
         }
       }
@@ -512,147 +1068,259 @@ function modalDependant() {
           // Cycle to the prev button
           setFocus(btnIndex, -1);
         }
+        e.stopPropagation();
+        e.preventDefault();
 
-        dom.stopEventPropagation(e);
-
-      } else {
-        if (keyCode === 13 || keyCode === 32) {
-          if (btnIndex === -1) {
-            // ENTER/SPACE clicked outside of a button.
-            fireClick($confirmButton, e);
+        // ENTER/SPACE
+      } else if (keyCode === 13 || keyCode === 32) {
+        if (btnIndex === -1 && params.allowEnterKey) {
+          // ENTER/SPACE clicked outside of a button.
+          if (params.focusCancel) {
+            fireClick(cancelButton, e);
+          } else {
+            fireClick(confirmButton, e);
           }
-        } else if (keyCode === 27 && params.allowEscapeKey === true) {
-          sweetAlert.closeModal();
-          resolve(undefined);
+          e.stopPropagation();
+          e.preventDefault();
         }
+        // ESC
+      } else if (keyCode === 27 && params.allowEscapeKey === true) {
+        sweetAlert.closeModal(params.onClose);
+        reject('esc');
       }
-    }
+    };
 
-    dom.states.previousWindowKeyDown = window.onkeydown;
+    states.previousWindowKeyDown = window.onkeydown;
     window.onkeydown = handleKeyDown;
 
     // Loading state
     if (params.buttonsStyling) {
-      $confirmButton.style.borderLeftColor = params.confirmButtonColor;
-      $confirmButton.style.borderRightColor = params.confirmButtonColor;
+      confirmButton.style.borderLeftColor = params.confirmButtonColor;
+      confirmButton.style.borderRightColor = params.confirmButtonColor;
     }
 
     /**
      * Show spinner instead of Confirm button and disable Cancel button
      */
-    sweetAlert.showLoading = sweetAlert.enableLoading = function() {
-      dom.addClass($confirmButton, 'loading');
-      dom.addClass(modal, 'loading');
-      $cancelButton.disabled = true;
+    sweetAlert.showLoading = sweetAlert.enableLoading = function () {
+      show(buttonsWrapper);
+      show(confirmButton, 'inline-block');
+      addClass(buttonsWrapper, swalClasses.loading);
+      addClass(modal, swalClasses.loading);
+      confirmButton.disabled = true;
+      cancelButton.disabled = true;
     };
 
     /**
      * Show spinner instead of Confirm button and disable Cancel button
      */
-    sweetAlert.hideLoading = sweetAlert.disableLoading = function() {
-      dom.removeClass($confirmButton, 'loading');
-      dom.removeClass(modal, 'loading');
-      $cancelButton.disabled = false;
+    sweetAlert.hideLoading = sweetAlert.disableLoading = function () {
+      if (!params.showConfirmButton) {
+        hide(confirmButton);
+        if (!params.showCancelButton) {
+          hide(getButtonsWrapper());
+        }
+      }
+      removeClass(buttonsWrapper, swalClasses.loading);
+      removeClass(modal, swalClasses.loading);
+      confirmButton.disabled = false;
+      cancelButton.disabled = false;
     };
 
-    sweetAlert.enableButtons = function() {
-      $confirmButton.disabled = false;
-      $cancelButton.disabled = false;
+    sweetAlert.getTitle = function () {
+      return getTitle();
+    };
+    sweetAlert.getContent = function () {
+      return getContent();
+    };
+    sweetAlert.getInput = function () {
+      return getInput();
+    };
+    sweetAlert.getImage = function () {
+      return getImage();
+    };
+    sweetAlert.getButtonsWrapper = function () {
+      return getButtonsWrapper();
+    };
+    sweetAlert.getConfirmButton = function () {
+      return getConfirmButton();
+    };
+    sweetAlert.getCancelButton = function () {
+      return getCancelButton();
     };
 
-    sweetAlert.disableButtons = function() {
-      $confirmButton.disabled = true;
-      $cancelButton.disabled = true;
+    sweetAlert.enableButtons = function () {
+      confirmButton.disabled = false;
+      cancelButton.disabled = false;
     };
 
-    sweetAlert.enableInput = function() {
+    sweetAlert.disableButtons = function () {
+      confirmButton.disabled = true;
+      cancelButton.disabled = true;
+    };
+
+    sweetAlert.enableConfirmButton = function () {
+      confirmButton.disabled = false;
+    };
+
+    sweetAlert.disableConfirmButton = function () {
+      confirmButton.disabled = true;
+    };
+
+    sweetAlert.enableInput = function () {
       var input = getInput();
+      if (!input) {
+        return false;
+      }
       if (input.type === 'radio') {
         var radiosContainer = input.parentNode.parentNode;
         var radios = radiosContainer.querySelectorAll('input');
-        for (var i = 0; i < radios.length; i++) {
-          radios[i].disabled = false;
+        for (var _i5 = 0; _i5 < radios.length; _i5++) {
+          radios[_i5].disabled = false;
         }
       } else {
         input.disabled = false;
       }
     };
 
-    sweetAlert.disableInput = function() {
+    sweetAlert.disableInput = function () {
       var input = getInput();
-      if (input.type === 'radio') {
+      if (!input) {
+        return false;
+      }
+      if (input && input.type === 'radio') {
         var radiosContainer = input.parentNode.parentNode;
         var radios = radiosContainer.querySelectorAll('input');
-        for (var i = 0; i < radios.length; i++) {
-          radios[i].disabled = true;
+        for (var _i6 = 0; _i6 < radios.length; _i6++) {
+          radios[_i6].disabled = true;
         }
       } else {
         input.disabled = true;
       }
     };
 
-    sweetAlert.showValidationError = function(error) {
-      var $validationError = modal.querySelector('.' + swalClasses.validationerror);
-      $validationError.innerHTML = error;
-      dom.show($validationError);
+    // Set modal min-height to disable scrolling inside the modal
+    sweetAlert.recalculateHeight = debounce(function () {
+      var modal = getModal();
+      if (!modal) {
+        return;
+      }
+      var prevState = modal.style.display;
+      modal.style.minHeight = '';
+      show(modal);
+      modal.style.minHeight = modal.scrollHeight + 1 + 'px';
+      modal.style.display = prevState;
+    }, 50);
 
-      var input = getInput();
-      dom.focusInput(input);
-      dom.addClass(input, 'error');
-    };
-
-    sweetAlert.resetValidationError = function() {
-      var $validationError = modal.querySelector('.' + swalClasses.validationerror);
-      dom.hide($validationError);
+    // Show block with validation error
+    sweetAlert.showValidationError = function (error) {
+      var validationError = getValidationError();
+      validationError.innerHTML = error;
+      show(validationError);
 
       var input = getInput();
       if (input) {
-        dom.removeClass(input, 'error');
+        focusInput(input);
+        addClass(input, swalClasses.inputerror);
       }
+    };
+
+    // Hide block with validation error
+    sweetAlert.resetValidationError = function () {
+      var validationError = getValidationError();
+      hide(validationError);
+      sweetAlert.recalculateHeight();
+
+      var input = getInput();
+      if (input) {
+        removeClass(input, swalClasses.inputerror);
+      }
+    };
+
+    sweetAlert.getProgressSteps = function () {
+      return params.progressSteps;
+    };
+
+    sweetAlert.setProgressSteps = function (progressSteps) {
+      params.progressSteps = progressSteps;
+      setParameters(params);
+    };
+
+    sweetAlert.showProgressSteps = function () {
+      show(getProgressSteps());
+    };
+
+    sweetAlert.hideProgressSteps = function () {
+      hide(getProgressSteps());
     };
 
     sweetAlert.enableButtons();
     sweetAlert.hideLoading();
     sweetAlert.resetValidationError();
 
-    // input, select
-    var inputTypes = ['input', 'select', 'radio', 'checkbox', 'textarea'];
-    var input;
-    for (i = 0; i < inputTypes.length; i++) {
-      var inputClass = swalClasses[inputTypes[i]];
-      input = dom.getChildByClass(modal, inputClass);
+    // inputs
+    var inputTypes = ['input', 'file', 'range', 'select', 'radio', 'checkbox', 'textarea'];
+    var input = void 0;
+    for (var _i7 = 0; _i7 < inputTypes.length; _i7++) {
+      var inputClass = swalClasses[inputTypes[_i7]];
+      var inputContainer = getChildByClass(modal, inputClass);
+      input = getInput(inputTypes[_i7]);
 
       // set attributes
-      while (input.attributes.length > 0) {
-        input.removeAttribute(input.attributes[0].name);
-      }
-      for (var attr in params.inputAttributes) {
-        input.setAttribute(attr, params.inputAttributes[attr]);
+      if (input) {
+        for (var j in input.attributes) {
+          if (input.attributes.hasOwnProperty(j)) {
+            var attrName = input.attributes[j].name;
+            if (attrName !== 'type' && attrName !== 'value') {
+              input.removeAttribute(attrName);
+            }
+          }
+        }
+        for (var attr in params.inputAttributes) {
+          input.setAttribute(attr, params.inputAttributes[attr]);
+        }
       }
 
       // set class
-      input.className = inputClass;
+      inputContainer.className = inputClass;
       if (params.inputClass) {
-        dom.addClass(input, params.inputClass);
+        addClass(inputContainer, params.inputClass);
       }
 
-      dom._hide(input);
+      hide(inputContainer);
     }
 
-    var populateInputOptions;
+    var populateInputOptions = void 0;
     switch (params.input) {
       case 'text':
       case 'email':
       case 'password':
-      case 'file':
-        input = dom.getChildByClass(modal, swalClasses.input);
+      case 'number':
+      case 'tel':
+      case 'url':
+        input = getChildByClass(modal, swalClasses.input);
         input.value = params.inputValue;
         input.placeholder = params.inputPlaceholder;
         input.type = params.input;
-        dom._show(input);
+        show(input);
+        break;
+      case 'file':
+        input = getChildByClass(modal, swalClasses.file);
+        input.placeholder = params.inputPlaceholder;
+        input.type = params.input;
+        show(input);
+        break;
+      case 'range':
+        var range = getChildByClass(modal, swalClasses.range);
+        var rangeInput = range.querySelector('input');
+        var rangeOutput = range.querySelector('output');
+        rangeInput.value = params.inputValue;
+        rangeInput.type = params.input;
+        rangeOutput.value = params.inputValue;
+        show(range);
         break;
       case 'select':
-        var select = dom.getChildByClass(modal, swalClasses.select);
+        var select = getChildByClass(modal, swalClasses.select);
         select.innerHTML = '';
         if (params.inputPlaceholder) {
           var placeholder = document.createElement('option');
@@ -662,7 +1330,7 @@ function modalDependant() {
           placeholder.selected = true;
           select.appendChild(placeholder);
         }
-        populateInputOptions = function(inputOptions) {
+        populateInputOptions = function populateInputOptions(inputOptions) {
           for (var optionValue in inputOptions) {
             var option = document.createElement('option');
             option.value = optionValue;
@@ -672,23 +1340,21 @@ function modalDependant() {
             }
             select.appendChild(option);
           }
-          dom._show(select);
+          show(select);
           select.focus();
         };
         break;
       case 'radio':
-        var radio = dom.getChildByClass(modal, swalClasses.radio);
+        var radio = getChildByClass(modal, swalClasses.radio);
         radio.innerHTML = '';
-        populateInputOptions = function(inputOptions) {
+        populateInputOptions = function populateInputOptions(inputOptions) {
           for (var radioValue in inputOptions) {
-            var id = 1;
             var radioInput = document.createElement('input');
             var radioLabel = document.createElement('label');
             var radioLabelSpan = document.createElement('span');
             radioInput.type = 'radio';
             radioInput.name = swalClasses.radio;
             radioInput.value = radioValue;
-            radioInput.id = swalClasses.radio + '-' + (id++);
             if (params.inputValue === radioValue) {
               radioInput.checked = true;
             }
@@ -698,7 +1364,7 @@ function modalDependant() {
             radioLabel.for = radioInput.id;
             radio.appendChild(radioLabel);
           }
-          dom._show(radio);
+          show(radio);
           var radios = radio.querySelectorAll('input');
           if (radios.length) {
             radios[0].focus();
@@ -706,9 +1372,11 @@ function modalDependant() {
         };
         break;
       case 'checkbox':
-        var checkbox = dom.getChildByClass(modal, swalClasses.checkbox);
-        var checkboxInput = modal.querySelector('#' + swalClasses.checkbox);
+        var checkbox = getChildByClass(modal, swalClasses.checkbox);
+        var checkboxInput = getInput('checkbox');
+        checkboxInput.type = 'checkbox';
         checkboxInput.value = 1;
+        checkboxInput.id = swalClasses.checkbox;
         checkboxInput.checked = Boolean(params.inputValue);
         var label = checkbox.getElementsByTagName('span');
         if (label.length) {
@@ -717,214 +1385,209 @@ function modalDependant() {
         label = document.createElement('span');
         label.innerHTML = params.inputPlaceholder;
         checkbox.appendChild(label);
-        dom._show(checkbox);
+        show(checkbox);
         break;
       case 'textarea':
-        var textarea = dom.getChildByClass(modal, swalClasses.textarea);
+        var textarea = getChildByClass(modal, swalClasses.textarea);
         textarea.value = params.inputValue;
         textarea.placeholder = params.inputPlaceholder;
-        dom._show(textarea);
+        show(textarea);
         break;
       case null:
         break;
       default:
-        console.error('Unexpected type of input! Expected "text" or "email" or "password", "select", "checkbox", "textarea" or "file", got ' + typeof arguments[0]);
+        console.error('SweetAlert2: Unexpected type of input! Expected "text", "email", "password", "number", "tel", "select", "radio", "checkbox", "textarea", "file" or "url", got "' + params.input + '"');
         break;
     }
 
     if (params.input === 'select' || params.input === 'radio') {
       if (params.inputOptions instanceof Promise) {
         sweetAlert.showLoading();
-        params.inputOptions.then(function(inputOptions) {
+        params.inputOptions.then(function (inputOptions) {
           sweetAlert.hideLoading();
           populateInputOptions(inputOptions);
         });
-      } else if (typeof params.inputOptions === 'object') {
+      } else if (_typeof(params.inputOptions) === 'object') {
         populateInputOptions(params.inputOptions);
       } else {
-        console.error('Unexpected type of inputOptions! Expected object or Promise, got ' + params.inputOptions);
+        console.error('SweetAlert2: Unexpected type of inputOptions! Expected object or Promise, got ' + _typeof(params.inputOptions));
       }
     }
+
+    openModal(params.animation, params.onOpen);
+
+    // Focus the first element (input or button)
+    if (params.allowEnterKey) {
+      setFocus(-1, 1);
+    } else {
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
+    }
+
+    // fix scroll
+    getContainer().scrollTop = 0;
+
+    // Observe changes inside the modal and adjust height
+    if (typeof MutationObserver !== 'undefined' && !swal2Observer) {
+      swal2Observer = new MutationObserver(sweetAlert.recalculateHeight);
+      swal2Observer.observe(modal, { childList: true, characterData: true, subtree: true });
+    }
   });
-}
+};
 
-// SweetAlert function
-function sweetAlert() {
-  // Copy arguments to the local args variable
-  var args = arguments;
-  var modal = dom.getModal();
-
-  if (modal === null) {
-    sweetAlert.init();
-    modal = dom.getModal();
-  }
-
-  if (dom.hasClass(modal, 'visible')) {
-    dom.resetPrevState();
-  }
-
-  return modalDependant.apply(this, args);
-}
+/*
+ * Global function to determine if swal2 modal is shown
+ */
+sweetAlert.isVisible = function () {
+  return !!getModal();
+};
 
 /*
  * Global function for chaining sweetAlert modals
  */
-sweetAlert.queue = function(steps) {
-  return new Promise(function(resolve, reject) {
+sweetAlert.queue = function (steps) {
+  queue = steps;
+  var resetQueue = function resetQueue() {
+    queue = [];
+    document.body.removeAttribute('data-swal2-queue-step');
+  };
+  var queueResult = [];
+  return new Promise(function (resolve, reject) {
     (function step(i, callback) {
-      if (i < steps.length) {
-        sweetAlert(steps[i]).then(function(isConfirm) {
-          if (isConfirm) {
-            step(i+1, callback);
-          } else {
-            reject();
-          }
+      if (i < queue.length) {
+        document.body.setAttribute('data-swal2-queue-step', i);
+
+        sweetAlert(queue[i]).then(function (result) {
+          queueResult.push(result);
+          step(i + 1, callback);
+        }, function (dismiss) {
+          resetQueue();
+          reject(dismiss);
         });
       } else {
-        resolve();
+        resetQueue();
+        resolve(queueResult);
       }
     })(0);
   });
 };
 
 /*
+ * Global function for getting the index of current modal in queue
+ */
+sweetAlert.getQueueStep = function () {
+  return document.body.getAttribute('data-swal2-queue-step');
+};
+
+/*
+ * Global function for inserting a modal to the queue
+ */
+sweetAlert.insertQueueStep = function (step, index) {
+  if (index && index < queue.length) {
+    return queue.splice(index, 0, step);
+  }
+  return queue.push(step);
+};
+
+/*
+ * Global function for deleting a modal from the queue
+ */
+sweetAlert.deleteQueueStep = function (index) {
+  if (typeof queue[index] !== 'undefined') {
+    queue.splice(index, 1);
+  }
+};
+
+/*
  * Global function to close sweetAlert
  */
-sweetAlert.close = sweetAlert.closeModal = function() {
-  var modal = dom.getModal();
-  dom.removeClass(modal, 'show-swal2');
-  dom.addClass(modal, 'hide-swal2');
-  dom.removeClass(modal, 'visible');
+sweetAlert.close = sweetAlert.closeModal = function (onComplete) {
+  var container = getContainer();
+  var modal = getModal();
+  if (!modal) {
+    return;
+  }
+  removeClass(modal, swalClasses.show);
+  addClass(modal, swalClasses.hide);
+  clearTimeout(modal.timeout);
 
-  // Reset icon animations
-  var $successIcon = modal.querySelector('.' + swalClasses.icon + '.' + iconTypes.success);
-  dom.removeClass($successIcon, 'animate');
-  dom.removeClass($successIcon.querySelector('.tip'), 'animate-success-tip');
-  dom.removeClass($successIcon.querySelector('.long'), 'animate-success-long');
+  resetPrevState();
 
-  var $errorIcon = modal.querySelector('.' + swalClasses.icon + '.' + iconTypes.error);
-  dom.removeClass($errorIcon, 'animate-error-icon');
-  dom.removeClass($errorIcon.querySelector('.x-mark'), 'animate-x-mark');
+  var removeModalAndResetState = function removeModalAndResetState() {
+    container.parentNode.removeChild(container);
+    removeClass(document.documentElement, swalClasses.shown);
+    removeClass(document.body, swalClasses.shown);
+    undoScrollbar();
+    undoIOSfix();
+  };
 
-  var $warningIcon = modal.querySelector('.' + swalClasses.icon + '.' + iconTypes.warning);
-  dom.removeClass($warningIcon, 'pulse-warning');
-
-  dom.resetPrevState();
-
-  if (dom.animationEndEvent && !dom.hasClass(modal, 'no-animation')) {
-    modal.addEventListener(dom.animationEndEvent, function swalCloseEventFinished() {
-      modal.removeEventListener(dom.animationEndEvent, swalCloseEventFinished);
-      if (dom.hasClass(modal, 'hide-swal2')) {
-        dom._hide(modal);
-        dom.fadeOut(dom.getOverlay(), 0);
+  // If animation is supported, animate
+  if (animationEndEvent && !hasClass(modal, swalClasses.noanimation)) {
+    modal.addEventListener(animationEndEvent, function swalCloseEventFinished() {
+      modal.removeEventListener(animationEndEvent, swalCloseEventFinished);
+      if (hasClass(modal, swalClasses.hide)) {
+        removeModalAndResetState();
       }
     });
   } else {
-    dom._hide(modal);
-    dom._hide(dom.getOverlay());
+    // Otherwise, remove immediately
+    removeModalAndResetState();
+  }
+  if (onComplete !== null && typeof onComplete === 'function') {
+    setTimeout(function () {
+      onComplete(modal);
+    });
   }
 };
 
 /*
  * Global function to click 'Confirm' button
  */
-sweetAlert.clickConfirm = function() {
-  dom.getConfirmButton().click();
+sweetAlert.clickConfirm = function () {
+  return getConfirmButton().click();
 };
 
 /*
  * Global function to click 'Cancel' button
  */
-sweetAlert.clickCancel = function() {
-  dom.getCancelButton().click();
-};
-
-/*
- * Add modal + overlay to DOM
- */
-sweetAlert.init = function() {
-  if (typeof document === 'undefined') {
-    console.log('SweetAlert2 requires document to initialize');
-    return;
-  } else if (document.getElementsByClassName(swalClasses.container).length) {
-    return;
-  }
-
-  var sweetWrap = document.createElement('div');
-  sweetWrap.className = swalClasses.container;
-
-  sweetWrap.innerHTML = sweetHTML;
-
-  document.body.appendChild(sweetWrap);
-
-  var modal = dom.getModal();
-  var $input = dom.getChildByClass(modal, swalClasses.input);
-  var $select = dom.getChildByClass(modal, swalClasses.select);
-  var $checkbox = modal.querySelector('#' + swalClasses.checkbox);
-  var $textarea = dom.getChildByClass(modal, swalClasses.textarea);
-
-  $input.oninput = function() {
-    sweetAlert.resetValidationError();
-  };
-
-  $input.onkeyup = function(event) {
-    event.stopPropagation();
-    if (event.keyCode === 13) {
-      sweetAlert.clickConfirm();
-    }
-  };
-
-  $select.onchange = function() {
-    sweetAlert.resetValidationError();
-  };
-
-  $checkbox.onchange = function() {
-    sweetAlert.resetValidationError();
-  };
-
-  $textarea.onchange = function() {
-    sweetAlert.resetValidationError();
-  };
+sweetAlert.clickCancel = function () {
+  return getCancelButton().click();
 };
 
 /**
  * Set default params for each popup
  * @param {Object} userParams
  */
-sweetAlert.setDefaults = function(userParams) {
-  if (!userParams) {
-    throw new Error('userParams is required');
-  }
-  if (typeof userParams !== 'object') {
-    throw new Error('userParams has to be a object');
+sweetAlert.setDefaults = function (userParams) {
+  if (!userParams || (typeof userParams === 'undefined' ? 'undefined' : _typeof(userParams)) !== 'object') {
+    return console.error('SweetAlert2: the argument for setDefaults() is required and has to be a object');
   }
 
-  extend(modalParams, userParams);
+  for (var param in userParams) {
+    if (!defaultParams.hasOwnProperty(param) && param !== 'extraParams') {
+      console.warn('SweetAlert2: Unknown parameter "' + param + '"');
+      delete userParams[param];
+    }
+  }
+
+  _extends(modalParams, userParams);
 };
 
 /**
  * Reset default params for each popup
  */
-sweetAlert.resetDefaults = function() {
-  modalParams = extend({}, defaultParams);
+sweetAlert.resetDefaults = function () {
+  modalParams = _extends({}, defaultParams);
 };
 
-sweetAlert.version = '';
+sweetAlert.noop = function () {};
 
-window.sweetAlert = window.swal = sweetAlert;
+sweetAlert.version = '6.6.0';
 
-/*
-* If library is injected after page has loaded
-*/
-(function() {
-  if (document.readyState === 'complete' || document.readyState === 'interactive' && document.body) {
-    sweetAlert.init();
-  } else {
-    document.addEventListener('DOMContentLoaded', function onDomContentLoaded() {
-      document.removeEventListener('DOMContentLoaded', onDomContentLoaded, false);
-      sweetAlert.init();
-    }, false);
-  }
-})();
+sweetAlert.default = sweetAlert;
 
-export default sweetAlert;
+return sweetAlert;
+
+})));
+if (window.Sweetalert2) window.sweetAlert = window.swal = window.Sweetalert2;

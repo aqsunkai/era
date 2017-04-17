@@ -14,7 +14,7 @@
 <html>
 <head>
     <title>学习Vue.js</title>
-    <link rel="stylesheet" type="text/css" href="<%=basePath%>sweetAlert/sweetalert.css">
+    <link rel="stylesheet" type="text/css" href="<%=basePath%>sweetAlert/sweetalert2.min.css">
 </head>
 <style>
     .class1{
@@ -73,7 +73,7 @@
         <button v-on:click="say('what')">Say what</button>
     </div>
 </body>
-<script src="<%=basePath%>sweetAlert/sweetalert.min.js"></script>
+<script src="<%=basePath%>sweetAlert/sweetalert2.min.js"></script>
 <script src="<%=basePath%>js/vue/vue.js"></script>
 <script>
 

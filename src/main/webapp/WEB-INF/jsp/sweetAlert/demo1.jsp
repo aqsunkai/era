@@ -22,7 +22,8 @@
     <link rel="stylesheet" href="<%=basePath%>sweetAlert/mui.min.css">
     <link rel="stylesheet" href="<%=basePath%>sweetAlert/sweetalert2.min.css" />
     <script type="text/javascript" src="<%=basePath%>sweetAlert/sweetalert2.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/es6-promise/latest/es6-promise.min.js"></script>
+    <%--FOR IE SUPPORT--%>
+    <script src="<%=basePath%>sweetAlert/es6-promise.min.js"></script>
     <script type="text/javascript" src="<%=basePath%>js/jquery-2.1.4/jquery.min.js"></script>
     <style>
         .mui-content-padded {

@@ -121,4 +121,22 @@
       status = #{status,jdbcType=TINYINT}
     where id = #{id,jdbcType=INTEGER}
   </update>
+  <select id="queryList" parameterType="com.sun.entity.Bootgrid" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" />
+     from sys_user
+     where (nickname like #{searchPhrase} or email like #{searchPhrase})
+     <choose>
+      <when test="sortBy !=null and sortBy !=''">
+        order by ${sortBy} ${sortType}
+      </when>
+      <otherwise>
+        order by id ASC
+      </otherwise>
+     </choose>
+     limit #{firstResult},#{maxResults}
+  </select>
+  <select id="countAll" parameterType="com.sun.entity.Bootgrid" resultType="java.lang.Integer">
+    select count(1) from sys_user
+     where (nickname like #{searchPhrase} or email like #{searchPhrase})
+  </select>
 </mapper>

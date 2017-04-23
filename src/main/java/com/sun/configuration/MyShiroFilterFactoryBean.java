@@ -33,6 +33,10 @@ public class MyShiroFilterFactoryBean extends ShiroFilterFactoryBean {
         ignoreExt.add(".bmp");
         ignoreExt.add(".js");
         ignoreExt.add(".css");
+        ignoreExt.add(".eot");
+        ignoreExt.add(".ttf");
+        ignoreExt.add(".woff");
+        ignoreExt.add(".woff2");
     }
     /**
      * 启动时加载

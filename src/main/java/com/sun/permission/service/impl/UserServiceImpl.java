@@ -3,10 +3,13 @@ package com.sun.permission.service.impl;
 import com.sun.permission.mapper.UserMapper;
 import com.sun.permission.model.User;
 import com.sun.permission.service.UserService;
+import com.sun.entity.Bootgrid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * Created by sun on 2017-1-15.
@@ -47,5 +50,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public void test() {
         System.out.println("测试成功");
+    }
+
+    @Override
+    public List<User> queryList(Bootgrid bootgrid) {
+        return userMapper.queryList(bootgrid);
+    }
+
+    @Override
+    public int countAll(Bootgrid bootgrid) {
+        return userMapper.countAll(bootgrid);
     }
 }

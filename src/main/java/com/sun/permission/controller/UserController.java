@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.permission.model.User;
 import com.sun.permission.service.PermissionService;
 import com.sun.permission.service.UserService;
+import com.sun.entity.Bootgrid;
+import com.sun.util.ObjectMapperTool;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -14,6 +16,7 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by sun on 2017-4-2.
@@ -134,5 +137,21 @@ public class UserController {
     public String getUserList(@PathVariable int userid){
         logger.info("------进入用户信息修改-------");
         return "user_edit";
+    }
+
+    @RequestMapping("/queryList")
+    public void queryList(Bootgrid bootgrid,HttpServletRequest req,HttpServletResponse resp){
+        bootgrid.fieldSort();
+        List<User> list = userService.queryList(bootgrid);
+        int count = userService.countAll(bootgrid);
+        bootgrid.setRows(list);
+        bootgrid.setTotal(count);
+        resp.setContentType("application/json; charset=UTF-8");
+        resp.setCharacterEncoding("UTF-8");
+        try {
+            resp.getWriter().write(ObjectMapperTool.toJson(bootgrid));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

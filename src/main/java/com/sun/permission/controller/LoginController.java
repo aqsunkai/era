@@ -36,6 +36,7 @@ public class LoginController {
 
     //用户登录次数计数  redisKey 前缀
     private String SHIRO_LOGIN_COUNT = "shiro_login_count_";
+
     //用户登录是否被锁定    一小时 redisKey 前缀
     private String SHIRO_IS_LOCK = "shiro_is_lock_";
 
